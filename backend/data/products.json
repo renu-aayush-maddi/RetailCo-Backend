@@ -1,0 +1,5 @@
+[
+  {"product_id":"P001","name":"Navy Casual Shirt","category":"Men>Shirts","price":799,"images":["/img/p1.jpg"],"attributes":{"color":"navy","sizes":["S","M","L"]},"tags":["casual","cotton"]},
+  {"product_id":"P002","name":"White Formal Shirt","category":"Men>Shirts","price":1199,"images":["/img/p2.jpg"],"attributes":{"color":"white","sizes":["M","L","XL"]},"tags":["formal","office"]},
+  {"product_id":"P003","name":"Black Jeans","category":"Men>Pants","price":1499,"images":["/img/p3.jpg"],"attributes":{"color":"black","sizes":["30","32","34"]},"tags":["denim","casual"]}
+]

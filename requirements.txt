@@ -1,0 +1,19 @@
+# fastapi>=0.100.0
+# uvicorn[standard]==0.22.0
+# sqlalchemy>=2.0,<2.1
+# asyncpg==0.27.0
+# alembic==1.11.1
+# pydantic==2.5.1
+# python-dotenv==1.0.0
+# openai==1.0.0
+# httpx==0.24.0
+# redis
+# langchain
+# sentence-transformers==2.2.2
+# aiofiles==23.1.0
+
+
+
+# passlib[bcrypt]
+# python-jose[cryptography]
+# email-validator

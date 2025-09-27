@@ -1,0 +1,5 @@
+[
+  {"product_id":"P001","store_id":"S1","stock":5,"reserved":0},
+  {"product_id":"P002","store_id":"S1","stock":2,"reserved":0},
+  {"product_id":"P003","store_id":"S1","stock":10,"reserved":0}
+]

@@ -963,10 +963,639 @@
 
 
 
-# backend/agents/master_graph.py
+# # backend/agents/master_graph.py
+# """
+# Agentic Orchestration Graph with Redis-backed session memory.
+# LLM decides intent + plan, then only the requested agents run.
+# """
+
+# import os
+# import json
+# import uuid
+# from typing import Any, Dict, Optional, List
+# from dotenv import load_dotenv
+# load_dotenv()
+
+# from redis.asyncio import Redis
+# REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+# redis = Redis.from_url(REDIS_URL, decode_responses=True)
+
+# import httpx
+# OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+# USE_GROQ = os.getenv("USE_GROQ", "false").lower() in ("1", "true", "yes")
+# GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+
+# # import agents
+# from . import rec_agent, inventory_agent, payment_agent
+
+# # for order queries
+# from backend.db import AsyncSessionLocal
+# from backend import crud as db_crud
+
+
+# # ---------------- Node + Graph base ----------------
+
+# class NodeResult:
+#     def __init__(self, output: Dict[str, Any]):
+#         self.output = output
+
+
+# class Node:
+#     def __init__(self, id: str):
+#         self.id = id
+
+#     async def run(self, ctx: Dict[str, Any]) -> NodeResult:
+#         return NodeResult({})
+
+
+# class AgentGraph:
+#     def __init__(self, graph_id: Optional[str] = None):
+#         self.nodes: Dict[str, Node] = {}
+#         self.graph_id = graph_id or ("graph-" + uuid.uuid4().hex[:8])
+
+#     def add_node(self, node: Node):
+#         self.nodes[node.id] = node
+
+
+# # ---------------- Session Memory ----------------
+
+# SESSION_PREFIX = "session:"
+
+
+# async def load_session(session_id: str) -> Dict[str, Any]:
+#     key = SESSION_PREFIX + session_id
+#     raw = await redis.get(key)
+#     if not raw:
+#         return {"session_id": session_id, "memory": {}, "history": []}
+#     try:
+#         return json.loads(raw)
+#     except Exception:
+#         return {"session_id": session_id, "memory": {}, "history": []}
+
+
+# async def save_session(session_id: str, session_obj: Dict[str, Any], ttl_seconds: int = 60 * 60 * 24):
+#     key = SESSION_PREFIX + session_id
+#     await redis.set(key, json.dumps(session_obj), ex=ttl_seconds)
+
+
+# # ---------------- Nodes ----------------
+
+# class LLMAgentNode(Node):
+#     def __init__(self, id: str = "llm_intent", system_prompt: Optional[str] = None, timeout: int = 15):
+#         super().__init__(id)
+#         available_agents = ["rec_agent", "inventory_agent", "payment_agent", "order_agent"]
+#         self.system_prompt = system_prompt or f"""
+# You are the Retail Master Orchestrator. You MUST respond in JSON only. No explanations, no markdown.
+
+# AVAILABLE_AGENTS: {available_agents}
+
+# Strict JSON shape:
+# {{
+#   "intent": "recommend" | "buy" | "other" | "profile",
+#   "plan": [list of agent IDs to call, in order],        // MUST use only IDs from AVAILABLE_AGENTS
+#   "message": "a concise human-friendly reply to show the user",
+#   "notes": "developer-only short reasoning (optional)",
+#   "meta": {{ ... optional structured details (e.g. rec_query, sku, qty, profile) ... }}
+# }}
+
+# IMPORTANT RULES:
+# - Always include "plan" when the user expects data/action (recommendations, availability checks, buy).
+# - If the user asks for product suggestions, 'plan' should include ["rec_agent","inventory_agent"] and meta.rec_query may contain the exact search string or filters.
+# - If the user asks to buy/place an order, 'plan' should include ["rec_agent","inventory_agent","payment_agent"] and meta should contain {{"sku":"P001","qty":1}} or similar.
+# - Use only agent IDs from AVAILABLE_AGENTS; if you need functionality not listed, return intent:"other" and a clarifying message.
+
+# EXAMPLES:
+# 1) User: "show me white shirts for formal occasions"
+# {{
+#   "intent": "recommend",
+#   "plan": ["rec_agent","inventory_agent"],
+#   "message": "Great — here are a few white formal shirts I found (I included SKUs). Which would you like to try?",
+#   "notes": "recommendation with rec_query",
+#   "meta": {{"rec_query":"white formal shirt", "filters":{{"style":"formal"}}}}
+# }}
+
+# 2) User: "I want to buy the first one (SKU P001)"
+# {{
+#   "intent": "buy",
+#   "plan": ["rec_agent","inventory_agent","payment_agent"],
+#   "message": "I can place the order for SKU P001 — shall I proceed to payment?",
+#   "notes": "user asked to checkout specific SKU",
+#   "meta": {{"sku":"P001","qty":1}}
+# }}
+
+# 3) User: "hi"
+# {{
+#   "intent": "other",
+#   "plan": [],
+#   "message": "Hi there! 👋 How can I help with your shopping today?",
+#   "notes": "greeting"
+# }}
+
+# Always return valid JSON only.
+# """
+#         self.timeout = timeout
+
+
+#     async def call_openai(self, prompt: str) -> str:
+#         headers = {"Authorization": f"Bearer {OPENAI_API_KEY}"} if OPENAI_API_KEY else {}
+#         payload = {
+#             "model": "gpt-4o-mini" if OPENAI_API_KEY else "gpt-3.5-turbo",
+#             "messages": [
+#                 {"role": "system", "content": self.system_prompt},
+#                 {"role": "user", "content": prompt}
+#             ],
+#             "temperature": 0.0,
+#             "max_tokens": 400
+#         }
+#         async with httpx.AsyncClient(timeout=self.timeout) as client:
+#             r = await client.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
+#             r.raise_for_status()
+#             body = r.json()
+#             return body["choices"][0]["message"]["content"]
+
+#     async def call_groq(self, prompt: str) -> str:
+#         headers = {"Authorization": f"Bearer {GROQ_API_KEY}"} if GROQ_API_KEY else {}
+#         payload = {
+#             "model": "groq-llama3-70b-mini" if GROQ_API_KEY else "groq-demo",
+#             "input": prompt,
+#             "temperature": 0.0
+#         }
+#         async with httpx.AsyncClient(timeout=self.timeout) as client:
+#             r = await client.post("https://api.groq.ai/v1/complete", headers=headers, json=payload)
+#             r.raise_for_status()
+#             body = r.json()
+#             return body.get("output", "") or body.get("text", "")
+
+#     async def run(self, ctx: Dict[str, Any]) -> NodeResult:
+#         user_text = ctx.get("incoming_text", "")
+#         session_memory = ctx.get("memory", {})
+#         # feed last 5 history turns for context
+#         history = ctx.get("history", []) or []
+#         recent_history = history[-5:]
+#         # small grounding: pass a tiny set of retrieved products (mini-RAG)
+#         retrieved = rec_agent.simple_keyword_recommend(user_text, top_k=3) or []
+#         prompt = (
+#             f"SessionMemory: {json.dumps(session_memory)}\n"
+#             f"ConversationHistory: {json.dumps(recent_history)}\n"
+#             f"RetrievedProducts: {json.dumps(retrieved)}\n\n"
+#             f"User: {user_text}\n\n"
+#             "Respond strictly in JSON as specified in system prompt."
+#         )
+
+#         if USE_GROQ and GROQ_API_KEY:
+#             out = await self.call_groq(prompt)
+#         elif OPENAI_API_KEY:
+#             out = await self.call_openai(prompt)
+#         else:
+#             raise RuntimeError("No LLM provider configured (OPENAI_API_KEY or GROQ_API_KEY required)")
+
+#         parsed = None
+#         try:
+#             parsed = json.loads(out)
+#         except Exception:
+#             import re
+#             m = re.search(r"(\{.*\})", out, re.S)
+#             if m:
+#                 try:
+#                     parsed = json.loads(m.group(1))
+#                 except Exception:
+#                     parsed = {"intent": "other", "plan": [], "message": None, "notes": "failed_json_parse", "raw": out}
+#             else:
+#                 parsed = {"intent": "other", "plan": [], "message": None, "notes": "no_json_found", "raw": out}
+
+#         intent = parsed.get("intent", "other") if isinstance(parsed, dict) else "other"
+#         plan = parsed.get("plan", []) if isinstance(parsed, dict) else []
+#         message = parsed.get("message") if isinstance(parsed, dict) else None
+#         notes = parsed.get("notes") if isinstance(parsed, dict) else None
+#         meta = parsed.get("meta") if isinstance(parsed, dict) else None
+
+#         normalized = {
+#             "intent": intent,
+#             "plan": plan,
+#             "message": message,
+#             "notes": notes,
+#             "meta": meta,
+#             "raw": out
+#         }
+
+#         return NodeResult(normalized)
+
+
+# class RecAgentNode(Node):
+#     async def run(self, ctx: Dict[str, Any]) -> NodeResult:
+#         nodouts = ctx.get("node_outputs", {}) or {}
+#         llm_intent = nodouts.get("llm_intent") or {}
+#         meta = llm_intent.get("meta") if isinstance(llm_intent, dict) else None
+#         if meta:
+#             recs = rec_agent.recommend_from_meta(meta, top_k=3)
+#         else:
+#             user_text = ctx.get("incoming_text", "")
+#             recs = rec_agent.simple_keyword_recommend(user_text, top_k=3)
+#         return NodeResult({"recs": recs})
+
+
+
+# class InventoryAgentNode(Node):
+#     def __init__(self, id: str = "inventory_agent", store_id: str = "S1"):
+#         super().__init__(id)
+#         self.store_id = store_id
+
+#     async def run(self, ctx: Dict[str, Any]) -> NodeResult:
+#         nodouts = ctx.get("node_outputs", {})
+#         recs = nodouts.get("rec_agent", {}).get("recs", [])
+#         invs = []
+
+#         for p in recs:
+#             pid = p.get("product_id")
+#             inv = inventory_agent.check_stock_local(pid, self.store_id) or {}
+#             stock = inv.get("stock", 0)
+#             reserved = inv.get("reserved", 0)
+#             available_qty = max(stock - reserved, 0)
+#             invs.append({
+#                 "product_id": pid,
+#                 "stock": stock,
+#                 "reserved": reserved,
+#                 "available_qty": available_qty,
+#                 "is_available": available_qty > 0
+#             })
+
+#         return NodeResult({"inventory": invs})
+
+
+# class PaymentAgentNode(Node):
+#     async def run(self, ctx: Dict[str, Any]) -> NodeResult:
+#         nodouts = ctx.get("node_outputs", {})
+#         recs = nodouts.get("rec_agent", {}).get("recs", [])
+#         llm_intent = nodouts.get("llm_intent") or {}
+#         meta = llm_intent.get("meta") if isinstance(llm_intent, dict) else {}
+#         sku = meta.get("sku") if isinstance(meta, dict) else None
+
+#         if sku:
+#             product_id = sku
+#             prod = rec_agent.get_product_by_sku(product_id)
+#             price = float(prod.get("price", 0)) if prod else 0.0
+#             product_name = prod.get("name") if prod else product_id
+#         else:
+#             if not recs:
+#                 return NodeResult({
+#                     "success": False,
+#                     "error": "no_recommendation_to_buy",
+#                     "message": "No product selected to purchase."
+#                 })
+#             chosen = recs[0]
+#             product_id = chosen.get("product_id")
+#             price = float(chosen.get("price", 0))
+#             product_name = chosen.get("name", product_id)
+
+#         try:
+#             result = await payment_agent.process_checkout_db(
+#                 ctx.get("user_id", "anonymous"), product_id, price,
+#                 store_id="S1", qty=1
+#             )
+
+#             # handle structured results
+#             if result.get("status") == "error" and result.get("error") == "out_of_stock":
+#                 return NodeResult({
+#                     "success": False,
+#                     "error": "out_of_stock",
+#                     "message": f"Sorry, {product_name} (SKU {product_id}) is out of stock right now.",
+#                     "meta": {"sku": product_id, "qty": 1, "store_id": "S1"}
+#                 })
+
+#             elif result.get("status") == "success":
+#                 return NodeResult({
+#                     "success": True,
+#                     "message": f"Your order for {product_name} (SKU {product_id}) has been placed successfully.",
+#                     "meta": result
+#                 })
+
+#             # fallback for unexpected errors
+#             return NodeResult({
+#                 "success": False,
+#                 "error": result.get("error", "checkout_failed"),
+#                 "message": "Could not complete checkout.",
+#                 "meta": result
+#             })
+
+#         except Exception as e:
+#             return NodeResult({
+#                 "success": False,
+#                 "error": "checkout_failed",
+#                 "message": "An error occurred during checkout.",
+#                 "details": str(e)
+#             })
+
+
+# class OrderAgentNode(Node):
+#     async def run(self, ctx: Dict[str, Any]) -> NodeResult:
+#         # fetch orders for logged-in user
+#         user_id = ctx.get("user_id")
+#         if not user_id:
+#             return NodeResult({"orders": [], "error": "no_user"})
+#         async with AsyncSessionLocal() as session:
+#             try:
+#                 rows = await db_crud.get_orders_for_user(session, user_id)
+#                 orders = [{"order_id": r.order_id, "status": r.status, "items": r.items, "created_at": str(r.created_at)} for r in rows]
+#                 return NodeResult({"orders": orders})
+#             except Exception as e:
+#                 return NodeResult({"orders": [], "error": str(e)})
+
+
+# # ---------------- Master Runner ----------------
+
+# async def run_master(session_id: str, text: str, user_meta: Optional[Dict[str, Any]] = None):
+#     session = await load_session(session_id)
+#     ctx = {
+#         "session_id": session_id,
+#         "user_id": (user_meta or {}).get("user_id"),
+#         "incoming_text": text,
+#         "memory": session.get("memory", {}),
+#         "history": session.get("history", []),
+#         "node_outputs": {}
+#     }
+
+#     g = AgentGraph(graph_id=f"master-{session_id[:8]}")
+
+#     # nodes
+#     llm_node = LLMAgentNode()
+#     rec_node = RecAgentNode("rec_agent")
+#     inv_node = InventoryAgentNode("inventory_agent", store_id="S1")
+#     pay_node = PaymentAgentNode("payment_agent")
+#     order_node = OrderAgentNode("order_agent")
+
+#     for n in [llm_node, rec_node, inv_node, pay_node, order_node]:
+#         g.add_node(n)
+
+#     # run intent node first
+#     intent_res = await llm_node.run(ctx)
+#     ctx["node_outputs"]["llm_intent"] = intent_res.output
+#     intent_out = intent_res.output if isinstance(intent_res.output, dict) else {}
+#     intent = intent_out.get("intent", "other")
+#     plan = intent_out.get("plan", []) or []
+
+#     # If plan empty but intent implies action, insert safe defaults
+#     if not plan and intent in ("recommend", "buy"):
+#         if intent == "recommend":
+#             plan = ["rec_agent", "inventory_agent"]
+#         elif intent == "buy":
+#             plan = ["rec_agent", "inventory_agent", "payment_agent"]
+
+#     # Validate and fuzzy-map plan
+#     from difflib import get_close_matches
+#     validated_plan = []
+#     missing_nodes = []
+#     for nid in plan:
+#         if nid in g.nodes:
+#             validated_plan.append(nid)
+#             continue
+#         matches = get_close_matches(nid, list(g.nodes.keys()), n=1, cutoff=0.6)
+#         if matches:
+#             mapped = matches[0]
+#             validated_plan.append(mapped)
+#         else:
+#             lname = nid.lower()
+#             mapped = None
+#             if any(tok in lname for tok in ("recommend","rec","shirt","jean","product")):
+#                 mapped = "rec_agent"
+#             elif any(tok in lname for tok in ("inventory","stock","availability")):
+#                 mapped = "inventory_agent"
+#             elif any(tok in lname for tok in ("pay","payment","checkout","order")):
+#                 mapped = "payment_agent"
+#             if mapped and mapped in g.nodes:
+#                 validated_plan.append(mapped)
+#             else:
+#                 missing_nodes.append(nid)
+#     if missing_nodes:
+#         print(f"[MASTER] Ignored missing nodes from LLM (no mapping): {missing_nodes}")
+
+#     # run nodes in validated plan (order matters)
+#     for node_id in validated_plan:
+#         res = await g.nodes[node_id].run(ctx)
+#         ctx["node_outputs"][node_id] = res.output
+
+#     # persist some memory if LLM returned profile info in meta
+#     meta = intent_out.get("meta") or {}
+#     if isinstance(meta, dict):
+#         profile = meta.get("profile") or {}
+#         # e.g., {"name":"aayush"}
+#         if isinstance(profile, dict):
+#             if profile.get("name"):
+#                 mem = session.get("memory", {})
+#                 mem["name"] = profile.get("name")
+#                 session["memory"] = mem
+                
+#     # ---------------- ASSEMBLE FINAL ----------------
+#     final = {"session_id": session_id, "intent": intent, "results": {}}
+#     outs = ctx["node_outputs"]
+
+#     # recs
+#     recs = []
+#     if "rec_agent" in outs:
+#         recs = outs["rec_agent"].get("recs", []) or []
+#         final["results"]["recommendations"] = {"recs": recs}
+
+#     # inventory
+#     if "inventory_agent" in outs:
+#         final["results"]["inventory"] = outs["inventory_agent"]
+
+#     # order/payment
+#     if "payment_agent" in outs:
+#         final["results"]["order"] = outs["payment_agent"]
+
+#     # orders (user order history)
+#     if "order_agent" in outs:
+#         final["results"]["orders"] = outs["order_agent"].get("orders", [])
+
+#     # items list
+#     items = []
+#     for p in recs:
+#         items.append({
+#             "product_id": p.get("product_id"),
+#             "name": p.get("name"),
+#             "price": float(p.get("price", 0)) if p.get("price") is not None else 0.0,
+#             "image": (p.get("images") or [None])[0] if p.get("images") else None,
+#             "category": p.get("category"),
+#             "attributes": p.get("attributes", {}),
+#         })
+#     if items:
+#         final["results"]["items"] = items
+
+#     # Determine final assistant message:
+#     # Priority:
+#     # 1) payment/order agent result (success or error)
+#     # 2) LLM message (only if no terminal agent outcome)
+#     # 3) derived messages based on intent
+#     def _normalize_order_result(order_obj):
+#         """
+#         Normalize common shapes into a dict with keys:
+#         {status: "success"|"error"|None, success: bool, order_id, message, error}
+#         """
+#         if not isinstance(order_obj, dict):
+#             return {"status": None, "success": False, "order_id": None, "message": None, "error": None}
+#         # support both {"status":"success"} and {"success": True}
+#         status = order_obj.get("status")
+#         if status is None and "success" in order_obj:
+#             status = "success" if bool(order_obj.get("success")) else "error"
+#         order_id = order_obj.get("order_id") or (order_obj.get("meta") or {}).get("order_id")
+#         message = order_obj.get("message")
+#         error = order_obj.get("error")
+#         return {"status": status, "success": bool(order_obj.get("success") or (status == "success")), "order_id": order_id, "message": message, "error": error, "raw": order_obj}
+
+#     order = final["results"].get("order", {})
+#     order_norm = _normalize_order_result(order)
+
+#     # If we have a payment/order outcome, surface it (takes precedence over LLM)
+#     if order and (order_norm["success"] or order_norm["status"] in ("success", "error")):
+#         if order_norm["success"] or order_norm["status"] == "success":
+#             order_id = order_norm["order_id"] or (order.get("payment") or {}).get("payment_id")
+#             payment_status = (order.get("payment") or {}).get("status", "unknown")
+#             # prefer a message returned from agent, else synthesize one
+#             final_msg = order.get("message") or order_norm.get("message") or f"Order confirmed — Order ID: {order_id}. Payment status: {payment_status}."
+#             final["results"]["message"] = final_msg
+#         else:
+#             # error case (e.g., out_of_stock, reserve_exception, order_create_failed)
+#             # prefer explicit message from agent, else synthesize friendly message
+#             err = order_norm.get("error") or (order.get("error"))
+#             agent_msg = order.get("message") or order.get("details")
+#             if agent_msg:
+#                 final_msg = agent_msg
+#             elif err == "out_of_stock":
+#                 # try to present product name if available
+#                 sku = (order.get("meta") or {}).get("sku")
+#                 final_msg = f"Sorry — that item{f' (SKU {sku})' if sku else ''} is out of stock right now."
+#             else:
+#                 final_msg = f"Order failed: {err or 'unknown_error'}. Please try again."
+#             final["results"]["message"] = final_msg
+
+#     else:
+#         # No terminal order outcome — fall back to LLM message or derived text
+#         llm_message = intent_out.get("message")
+#         if llm_message:
+#             final["results"]["message"] = llm_message
+#         else:
+#             if intent == "recommend" and items:
+#                 final["results"]["message"] = f"I found {len(items)} items — here are the top matches."
+#             elif intent == "other":
+#                 # if user asked for personal info and we have memory, answer from memory
+#                 if text := ctx.get("incoming_text", ""):
+#                     mem = session.get("memory", {})
+#                     if "name" in mem and "what is my name" in text.lower():
+#                         final["results"]["message"] = f"Your name is {mem['name']}."
+#                     else:
+#                         final["results"]["message"] = intent_out.get("notes") or "Hello! I can help you find and buy products."
+#                 else:
+#                     final["results"]["message"] = intent_out.get("notes") or "Hello! I can help you find and buy products."
+#             else:
+#                 final["results"]["message"] = intent_out.get("notes") or "Here are the results."
+
+#     # Debug log the final message returned to frontend
+#     try:
+#         print(f"[MASTER] final message -> {final['results'].get('message')}")
+#     except Exception:
+#         pass
+
+#     # persist session history + memory
+#     session.setdefault("history", []).append({"incoming": text, "intent": intent, "results": final["results"]})
+#     mem = session.get("memory", {})
+#     mem.setdefault("recent_queries", [])
+#     mem["recent_queries"].append(text)
+#     mem["recent_queries"] = mem["recent_queries"][-5:]
+#     session["memory"] = mem
+#     session["last_updated"] = __import__("time").time()
+#     await save_session(session_id, session, ttl_seconds=60 * 60 * 24 * 7)
+
+#     final["llm_notes"] = intent_out.get("notes")
+#     return final
+
+
+#     # # ---------------- ASSEMBLE FINAL ----------------
+#     # final = {"session_id": session_id, "intent": intent, "results": {}}
+#     # outs = ctx["node_outputs"]
+
+#     # # recs
+#     # recs = []
+#     # if "rec_agent" in outs:
+#     #     recs = outs["rec_agent"].get("recs", []) or []
+#     #     final["results"]["recommendations"] = {"recs": recs}
+
+#     # # inventory
+#     # if "inventory_agent" in outs:
+#     #     final["results"]["inventory"] = outs["inventory_agent"]
+
+#     # # order/payment
+#     # if "payment_agent" in outs:
+#     #     final["results"]["order"] = outs["payment_agent"]
+
+#     # # orders (user order history)
+#     # if "order_agent" in outs:
+#     #     final["results"]["orders"] = outs["order_agent"].get("orders", [])
+
+#     # # items list
+#     # items = []
+#     # for p in recs:
+#     #     items.append({
+#     #         "product_id": p.get("product_id"),
+#     #         "name": p.get("name"),
+#     #         "price": float(p.get("price", 0)) if p.get("price") is not None else 0.0,
+#     #         "image": (p.get("images") or [None])[0] if p.get("images") else None,
+#     #         "category": p.get("category"),
+#     #         "attributes": p.get("attributes", {}),
+#     #     })
+#     # if items:
+#     #     final["results"]["items"] = items
+
+#     # # Friendly assistant message: prefer llm message, else derive
+#     # llm_message = intent_out.get("message")
+#     # if llm_message:
+#     #     final["results"]["message"] = llm_message
+#     # else:
+#     #     # strict check for order success
+#     #     order = final["results"].get("order", {})
+#     #     if order and order.get("status") == "success" and order.get("order_id"):
+#     #         final["results"]["message"] = f"Order confirmed — Order ID: {order.get('order_id')}. Payment status: {order.get('payment',{}).get('status','unknown')}"
+#     #     elif order and order.get("status") == "error":
+#     #         # surface error directly (e.g., out_of_stock)
+#     #         final["results"]["message"] = f"Order failed: {order.get('error', 'unknown_error')}"
+#     #     elif intent == "recommend" and items:
+#     #         final["results"]["message"] = f"I found {len(items)} items — here are the top matches."
+#     #     elif intent == "other":
+#     #         # if user asked for personal info and we have memory, answer from memory
+#     #         if text := ctx.get("incoming_text",""):
+#     #             mem = session.get("memory",{})
+#     #             if "name" in mem and "what is my name" in text.lower():
+#     #                 final["results"]["message"] = f"Your name is {mem['name']}."
+#     #             else:
+#     #                 final["results"]["message"] = intent_out.get("notes") or "Hello! I can help you find and buy products."
+#     #         else:
+#     #             final["results"]["message"] = intent_out.get("notes") or "Hello! I can help you find and buy products."
+#     #     else:
+#     #         final["results"]["message"] = intent_out.get("notes") or "Here are the results."
+
+#     # # persist session history + memory
+#     # session.setdefault("history", []).append({"incoming": text, "intent": intent, "results": final["results"]})
+#     # mem = session.get("memory", {})
+#     # mem.setdefault("recent_queries", [])
+#     # mem["recent_queries"].append(text)
+#     # mem["recent_queries"] = mem["recent_queries"][-5:]
+#     # session["memory"] = mem
+#     # session["last_updated"] = __import__("time").time()
+#     # await save_session(session_id, session, ttl_seconds=60 * 60 * 24 * 7)
+
+#     # final["llm_notes"] = intent_out.get("notes")
+#     # return final
+
+
+
+
+########################testing only##########################
+
+
+
 """
-Agentic Orchestration Graph with Redis-backed session memory.
-LLM decides intent + plan, then only the requested agents run.
+Agentic Orchestration Graph with Redis-backed session memory (omnichannel).
+- Canonical session IDs: user:{user_id}:{channel}
+- Cross-channel handoff: merge last N turns when switching channels
+- Durable user profile memory in Redis: user_profile:{user_id}
 """
 
 import os
@@ -1017,9 +1646,11 @@ class AgentGraph:
         self.nodes[node.id] = node
 
 
-# ---------------- Session Memory ----------------
+# ---------------- Redis-backed Session & Profile Memory ----------------
 
 SESSION_PREFIX = "session:"
+USER_ACTIVE_KEY_PREFIX = "user_active_session:"       # pointer to user's last active session
+USER_PROFILE_PREFIX = "user_profile:"                  # durable user profile store
 
 
 async def load_session(session_id: str) -> Dict[str, Any]:
@@ -1033,9 +1664,63 @@ async def load_session(session_id: str) -> Dict[str, Any]:
         return {"session_id": session_id, "memory": {}, "history": []}
 
 
-async def save_session(session_id: str, session_obj: Dict[str, Any], ttl_seconds: int = 60 * 60 * 24):
+async def save_session(session_id: str, session_obj: Dict[str, Any], ttl_seconds: int = 60 * 60 * 24 * 7):
     key = SESSION_PREFIX + session_id
     await redis.set(key, json.dumps(session_obj), ex=ttl_seconds)
+
+
+async def get_active_session_for_user(user_id: Optional[str]) -> Optional[str]:
+    if not user_id:
+        return None
+    return await redis.get(USER_ACTIVE_KEY_PREFIX + user_id)
+
+
+async def set_active_session_for_user(user_id: Optional[str], session_id: str, ttl_seconds: int = 60 * 60 * 24 * 7):
+    if not user_id:
+        return
+    await redis.set(USER_ACTIVE_KEY_PREFIX + user_id, session_id, ex=ttl_seconds)
+
+
+async def merge_sessions(from_sid: Optional[str], into_sid: Optional[str], keep_last: int = 10):
+    """
+    Merge (append) 'from_sid' memory/history into 'into_sid' (last N turns).
+    No-op if sids are equal/empty.
+    """
+    if not from_sid or not into_sid or from_sid == into_sid:
+        return
+    old = await load_session(from_sid)
+    new = await load_session(into_sid)
+    merged = {
+        "session_id": into_sid,
+        "memory": {**(old.get("memory") or {}), **(new.get("memory") or {})},
+        "history": ((old.get("history") or []) + (new.get("history") or []))[-keep_last:],
+        "last_updated": __import__("time").time()
+    }
+    await save_session(into_sid, merged)
+
+
+async def load_user_profile(user_id: Optional[str]) -> Dict[str, Any]:
+    if not user_id:
+        return {}
+    raw = await redis.get(USER_PROFILE_PREFIX + user_id)
+    if not raw:
+        return {}
+    try:
+        return json.loads(raw)
+    except Exception:
+        return {}
+
+
+async def save_user_profile(user_id: Optional[str], patch: Dict[str, Any], ttl_seconds: int = 60 * 60 * 24 * 90):
+    """
+    Merge 'patch' into existing durable profile for user. 90d TTL by default.
+    """
+    if not user_id or not isinstance(patch, dict):
+        return
+    key = USER_PROFILE_PREFIX + user_id
+    cur = await load_user_profile(user_id)
+    cur.update({k: v for k, v in patch.items() if v is not None})
+    await redis.set(key, json.dumps(cur), ex=ttl_seconds)
 
 
 # ---------------- Nodes ----------------
@@ -1052,49 +1737,20 @@ AVAILABLE_AGENTS: {available_agents}
 Strict JSON shape:
 {{
   "intent": "recommend" | "buy" | "other" | "profile",
-  "plan": [list of agent IDs to call, in order],        // MUST use only IDs from AVAILABLE_AGENTS
+  "plan": [list of agent IDs to call, in order],
   "message": "a concise human-friendly reply to show the user",
   "notes": "developer-only short reasoning (optional)",
-  "meta": {{ ... optional structured details (e.g. rec_query, sku, qty, profile) ... }}
+  "meta": {{ ... optional structured details (e.g., rec_query, sku, qty, profile) ... }}
 }}
 
-IMPORTANT RULES:
-- Always include "plan" when the user expects data/action (recommendations, availability checks, buy).
-- If the user asks for product suggestions, 'plan' should include ["rec_agent","inventory_agent"] and meta.rec_query may contain the exact search string or filters.
-- If the user asks to buy/place an order, 'plan' should include ["rec_agent","inventory_agent","payment_agent"] and meta should contain {{"sku":"P001","qty":1}} or similar.
-- Use only agent IDs from AVAILABLE_AGENTS; if you need functionality not listed, return intent:"other" and a clarifying message.
-
-EXAMPLES:
-1) User: "show me white shirts for formal occasions"
-{{
-  "intent": "recommend",
-  "plan": ["rec_agent","inventory_agent"],
-  "message": "Great — here are a few white formal shirts I found (I included SKUs). Which would you like to try?",
-  "notes": "recommendation with rec_query",
-  "meta": {{"rec_query":"white formal shirt", "filters":{{"style":"formal"}}}}
-}}
-
-2) User: "I want to buy the first one (SKU P001)"
-{{
-  "intent": "buy",
-  "plan": ["rec_agent","inventory_agent","payment_agent"],
-  "message": "I can place the order for SKU P001 — shall I proceed to payment?",
-  "notes": "user asked to checkout specific SKU",
-  "meta": {{"sku":"P001","qty":1}}
-}}
-
-3) User: "hi"
-{{
-  "intent": "other",
-  "plan": [],
-  "message": "Hi there! 👋 How can I help with your shopping today?",
-  "notes": "greeting"
-}}
-
-Always return valid JSON only.
+RULES:
+- Include "plan" when the user expects data/action (recommendations, availability checks, buy).
+- For product suggestions: use plan ["rec_agent","inventory_agent"] and set meta.rec_query/filters.
+- For checkout: use plan ["rec_agent","inventory_agent","payment_agent"] and set meta {{"sku":"P001","qty":1}}.
+- Extract profile signals from natural language into meta.profile (e.g., {{"shirt_size":"M","fit":"slim","preferred_store":"S1"}}).
+- Respond strictly with valid JSON.
 """
         self.timeout = timeout
-
 
     async def call_openai(self, prompt: str) -> str:
         headers = {"Authorization": f"Bearer {OPENAI_API_KEY}"} if OPENAI_API_KEY else {}
@@ -1132,8 +1788,10 @@ Always return valid JSON only.
         # feed last 5 history turns for context
         history = ctx.get("history", []) or []
         recent_history = history[-5:]
-        # small grounding: pass a tiny set of retrieved products (mini-RAG)
-        retrieved = rec_agent.simple_keyword_recommend(user_text, top_k=3) or []
+        # tiny grounding: pass a tiny set of retrieved products (mini-RAG)
+        # tiny grounding: pass a tiny set of retrieved products (mini-RAG)
+        retrieved = await rec_agent.simple_keyword_recommend(user_text, top_k=3) or []
+
         prompt = (
             f"SessionMemory: {json.dumps(session_memory)}\n"
             f"ConversationHistory: {json.dumps(recent_history)}\n"
@@ -1149,6 +1807,7 @@ Always return valid JSON only.
         else:
             raise RuntimeError("No LLM provider configured (OPENAI_API_KEY or GROQ_API_KEY required)")
 
+        # robust JSON parse
         parsed = None
         try:
             parsed = json.loads(out)
@@ -1186,11 +1845,13 @@ class RecAgentNode(Node):
         nodouts = ctx.get("node_outputs", {}) or {}
         llm_intent = nodouts.get("llm_intent") or {}
         meta = llm_intent.get("meta") if isinstance(llm_intent, dict) else None
+
         if meta:
-            recs = rec_agent.recommend_from_meta(meta, top_k=3)
+            recs = await rec_agent.recommend_from_meta(meta, top_k=3)
         else:
             user_text = ctx.get("incoming_text", "")
-            recs = rec_agent.simple_keyword_recommend(user_text, top_k=3)
+            recs = await rec_agent.simple_keyword_recommend(user_text, top_k=3)
+
         return NodeResult({"recs": recs})
 
 
@@ -1253,7 +1914,6 @@ class PaymentAgentNode(Node):
                 store_id="S1", qty=1
             )
 
-            # handle structured results
             if result.get("status") == "error" and result.get("error") == "out_of_stock":
                 return NodeResult({
                     "success": False,
@@ -1269,7 +1929,6 @@ class PaymentAgentNode(Node):
                     "meta": result
                 })
 
-            # fallback for unexpected errors
             return NodeResult({
                 "success": False,
                 "error": result.get("error", "checkout_failed"),
@@ -1288,7 +1947,6 @@ class PaymentAgentNode(Node):
 
 class OrderAgentNode(Node):
     async def run(self, ctx: Dict[str, Any]) -> NodeResult:
-        # fetch orders for logged-in user
         user_id = ctx.get("user_id")
         if not user_id:
             return NodeResult({"orders": [], "error": "no_user"})
@@ -1303,11 +1961,54 @@ class OrderAgentNode(Node):
 
 # ---------------- Master Runner ----------------
 
+def _canonicalize_session_id(raw_sid: str, user_id: Optional[str], default_channel: str = "web") -> str:
+    """
+    Map any provided session id to canonical: user:{user_id}:{channel}
+    If user_id missing, fallback to provided sid.
+    """
+    channel = default_channel
+    if ":" in (raw_sid or ""):
+        channel = (raw_sid.split(":")[0] or default_channel).lower()
+    if user_id:
+        return f"user:{user_id}:{channel}"
+    return raw_sid
+
+
 async def run_master(session_id: str, text: str, user_meta: Optional[Dict[str, Any]] = None):
+    """
+    Orchestrates:
+    - Canonicalize session_id -> user:{uid}:{channel}
+    - Rehydrate from last active session for user (merge last N)
+    - Load durable user_profile into session memory
+    - Run planned agents
+    - Persist extracted profile back to durable store
+    """
+    user_id = (user_meta or {}).get("user_id")
+    # Canonicalize session id
+    canonical_sid = _canonicalize_session_id(session_id, user_id=user_id, default_channel="web")
+    if canonical_sid != session_id:
+        try:
+            await merge_sessions(session_id, canonical_sid, keep_last=10)
+        except Exception:
+            pass
+        session_id = canonical_sid
+
+    # Rehydrate continuity from last active session (cross-channel)
+    try:
+        active_sid = await get_active_session_for_user(user_id) if user_id else None
+        if active_sid and active_sid != session_id:
+            await merge_sessions(active_sid, session_id, keep_last=10)
+    except Exception:
+        pass
+
+    # Load session & inject durable user profile
     session = await load_session(session_id)
+    profile = await load_user_profile(user_id) if user_id else {}
+    session.setdefault("memory", {}).setdefault("profile", profile)
+
     ctx = {
         "session_id": session_id,
-        "user_id": (user_meta or {}).get("user_id"),
+        "user_id": user_id,
         "incoming_text": text,
         "memory": session.get("memory", {}),
         "history": session.get("history", []),
@@ -1373,17 +2074,17 @@ async def run_master(session_id: str, text: str, user_meta: Optional[Dict[str, A
         res = await g.nodes[node_id].run(ctx)
         ctx["node_outputs"][node_id] = res.output
 
-    # persist some memory if LLM returned profile info in meta
+    # Persist durable profile if LLM extracted any
     meta = intent_out.get("meta") or {}
     if isinstance(meta, dict):
-        profile = meta.get("profile") or {}
-        # e.g., {"name":"aayush"}
-        if isinstance(profile, dict):
-            if profile.get("name"):
-                mem = session.get("memory", {})
-                mem["name"] = profile.get("name")
-                session["memory"] = mem
-                
+        profile_patch = meta.get("profile") or {}
+        if profile_patch:
+            # write to durable store
+            if user_id:
+                await save_user_profile(user_id, profile_patch)
+            # also reflect into session memory immediately
+            session["memory"].setdefault("profile", {}).update(profile_patch)
+
     # ---------------- ASSEMBLE FINAL ----------------
     final = {"session_id": session_id, "intent": intent, "results": {}}
     outs = ctx["node_outputs"]
@@ -1406,7 +2107,7 @@ async def run_master(session_id: str, text: str, user_meta: Optional[Dict[str, A
     if "order_agent" in outs:
         final["results"]["orders"] = outs["order_agent"].get("orders", [])
 
-    # items list
+    # items list (flattened for frontends)
     items = []
     for p in recs:
         items.append({
@@ -1421,18 +2122,9 @@ async def run_master(session_id: str, text: str, user_meta: Optional[Dict[str, A
         final["results"]["items"] = items
 
     # Determine final assistant message:
-    # Priority:
-    # 1) payment/order agent result (success or error)
-    # 2) LLM message (only if no terminal agent outcome)
-    # 3) derived messages based on intent
     def _normalize_order_result(order_obj):
-        """
-        Normalize common shapes into a dict with keys:
-        {status: "success"|"error"|None, success: bool, order_id, message, error}
-        """
         if not isinstance(order_obj, dict):
             return {"status": None, "success": False, "order_id": None, "message": None, "error": None}
-        # support both {"status":"success"} and {"success": True}
         status = order_obj.get("status")
         if status is None and "success" in order_obj:
             status = "success" if bool(order_obj.get("success")) else "error"
@@ -1444,31 +2136,24 @@ async def run_master(session_id: str, text: str, user_meta: Optional[Dict[str, A
     order = final["results"].get("order", {})
     order_norm = _normalize_order_result(order)
 
-    # If we have a payment/order outcome, surface it (takes precedence over LLM)
     if order and (order_norm["success"] or order_norm["status"] in ("success", "error")):
         if order_norm["success"] or order_norm["status"] == "success":
             order_id = order_norm["order_id"] or (order.get("payment") or {}).get("payment_id")
             payment_status = (order.get("payment") or {}).get("status", "unknown")
-            # prefer a message returned from agent, else synthesize one
             final_msg = order.get("message") or order_norm.get("message") or f"Order confirmed — Order ID: {order_id}. Payment status: {payment_status}."
             final["results"]["message"] = final_msg
         else:
-            # error case (e.g., out_of_stock, reserve_exception, order_create_failed)
-            # prefer explicit message from agent, else synthesize friendly message
             err = order_norm.get("error") or (order.get("error"))
             agent_msg = order.get("message") or order.get("details")
             if agent_msg:
                 final_msg = agent_msg
             elif err == "out_of_stock":
-                # try to present product name if available
                 sku = (order.get("meta") or {}).get("sku")
                 final_msg = f"Sorry — that item{f' (SKU {sku})' if sku else ''} is out of stock right now."
             else:
                 final_msg = f"Order failed: {err or 'unknown_error'}. Please try again."
             final["results"]["message"] = final_msg
-
     else:
-        # No terminal order outcome — fall back to LLM message or derived text
         llm_message = intent_out.get("message")
         if llm_message:
             final["results"]["message"] = llm_message
@@ -1476,19 +2161,15 @@ async def run_master(session_id: str, text: str, user_meta: Optional[Dict[str, A
             if intent == "recommend" and items:
                 final["results"]["message"] = f"I found {len(items)} items — here are the top matches."
             elif intent == "other":
-                # if user asked for personal info and we have memory, answer from memory
-                if text := ctx.get("incoming_text", ""):
-                    mem = session.get("memory", {})
-                    if "name" in mem and "what is my name" in text.lower():
-                        final["results"]["message"] = f"Your name is {mem['name']}."
-                    else:
-                        final["results"]["message"] = intent_out.get("notes") or "Hello! I can help you find and buy products."
+                txt = ctx.get("incoming_text", "") or ""
+                mem = session.get("memory", {})
+                if "name" in mem and "what is my name" in txt.lower():
+                    final["results"]["message"] = f"Your name is {mem['name']}."
                 else:
-                    final["results"]["message"] = intent_out.get("notes") or "Hello! I can help you find and buy products."
+                    final["results"]["message"] = "Hello! I can help you find and buy products."
             else:
-                final["results"]["message"] = intent_out.get("notes") or "Here are the results."
+                final["results"]["message"] = "Here are the results."
 
-    # Debug log the final message returned to frontend
     try:
         print(f"[MASTER] final message -> {final['results'].get('message')}")
     except Exception:
@@ -1504,82 +2185,9 @@ async def run_master(session_id: str, text: str, user_meta: Optional[Dict[str, A
     session["last_updated"] = __import__("time").time()
     await save_session(session_id, session, ttl_seconds=60 * 60 * 24 * 7)
 
+    # mark active session pointer
+    if user_id:
+        await set_active_session_for_user(user_id, session_id)
+
     final["llm_notes"] = intent_out.get("notes")
     return final
-
-
-    # # ---------------- ASSEMBLE FINAL ----------------
-    # final = {"session_id": session_id, "intent": intent, "results": {}}
-    # outs = ctx["node_outputs"]
-
-    # # recs
-    # recs = []
-    # if "rec_agent" in outs:
-    #     recs = outs["rec_agent"].get("recs", []) or []
-    #     final["results"]["recommendations"] = {"recs": recs}
-
-    # # inventory
-    # if "inventory_agent" in outs:
-    #     final["results"]["inventory"] = outs["inventory_agent"]
-
-    # # order/payment
-    # if "payment_agent" in outs:
-    #     final["results"]["order"] = outs["payment_agent"]
-
-    # # orders (user order history)
-    # if "order_agent" in outs:
-    #     final["results"]["orders"] = outs["order_agent"].get("orders", [])
-
-    # # items list
-    # items = []
-    # for p in recs:
-    #     items.append({
-    #         "product_id": p.get("product_id"),
-    #         "name": p.get("name"),
-    #         "price": float(p.get("price", 0)) if p.get("price") is not None else 0.0,
-    #         "image": (p.get("images") or [None])[0] if p.get("images") else None,
-    #         "category": p.get("category"),
-    #         "attributes": p.get("attributes", {}),
-    #     })
-    # if items:
-    #     final["results"]["items"] = items
-
-    # # Friendly assistant message: prefer llm message, else derive
-    # llm_message = intent_out.get("message")
-    # if llm_message:
-    #     final["results"]["message"] = llm_message
-    # else:
-    #     # strict check for order success
-    #     order = final["results"].get("order", {})
-    #     if order and order.get("status") == "success" and order.get("order_id"):
-    #         final["results"]["message"] = f"Order confirmed — Order ID: {order.get('order_id')}. Payment status: {order.get('payment',{}).get('status','unknown')}"
-    #     elif order and order.get("status") == "error":
-    #         # surface error directly (e.g., out_of_stock)
-    #         final["results"]["message"] = f"Order failed: {order.get('error', 'unknown_error')}"
-    #     elif intent == "recommend" and items:
-    #         final["results"]["message"] = f"I found {len(items)} items — here are the top matches."
-    #     elif intent == "other":
-    #         # if user asked for personal info and we have memory, answer from memory
-    #         if text := ctx.get("incoming_text",""):
-    #             mem = session.get("memory",{})
-    #             if "name" in mem and "what is my name" in text.lower():
-    #                 final["results"]["message"] = f"Your name is {mem['name']}."
-    #             else:
-    #                 final["results"]["message"] = intent_out.get("notes") or "Hello! I can help you find and buy products."
-    #         else:
-    #             final["results"]["message"] = intent_out.get("notes") or "Hello! I can help you find and buy products."
-    #     else:
-    #         final["results"]["message"] = intent_out.get("notes") or "Here are the results."
-
-    # # persist session history + memory
-    # session.setdefault("history", []).append({"incoming": text, "intent": intent, "results": final["results"]})
-    # mem = session.get("memory", {})
-    # mem.setdefault("recent_queries", [])
-    # mem["recent_queries"].append(text)
-    # mem["recent_queries"] = mem["recent_queries"][-5:]
-    # session["memory"] = mem
-    # session["last_updated"] = __import__("time").time()
-    # await save_session(session_id, session, ttl_seconds=60 * 60 * 24 * 7)
-
-    # final["llm_notes"] = intent_out.get("notes")
-    # return final

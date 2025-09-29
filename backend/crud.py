@@ -102,10 +102,11 @@
 # backend/crud.py
 from sqlalchemy import select, insert, update, text
 from sqlalchemy.ext.asyncio import AsyncSession
-from .models import Product, Inventory, Order, User, ChatHistory
+from .models import Product, Inventory, Order, User, ChatHistory ,UserManualProfile
 from typing import List, Dict, Optional
 import uuid
 from passlib.context import CryptContext
+
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -223,10 +224,10 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 
 
-async def create_user(db: AsyncSession, name: str, email: str, password: str) -> User:
+async def create_user(db: AsyncSession, name: str, email: str, password: str,phone_number: str) -> User:
     hashed = hash_password(password)
     user_id = str(uuid.uuid4())
-    stmt = insert(User).values(user_id=user_id, name=name, email=email, password_hash=hashed)
+    stmt = insert(User).values(user_id=user_id, name=name, email=email, password_hash=hashed,phone_number=phone_number)
     await db.execute(stmt)
     await db.commit()
     return await get_user_by_id(db, user_id)
@@ -295,3 +296,208 @@ async def upsert_guest_user_by_telegram(db: AsyncSession, telegram_id: str, name
     q = select(User).where(User.user_id == uid)
     r = await db.execute(q)
     return r.scalar_one_or_none()
+
+
+#################User Manual Profile#####################
+# async def get_manual_profile(db: AsyncSession, user_id: str) -> Optional[UserManualProfile]:
+#     q = select(UserManualProfile).where(UserManualProfile.user_id == user_id)
+#     r = await db.execute(q)
+#     return r.scalar_one_or_none()
+
+
+
+# async def get_manual_profile_with_user(db: AsyncSession, user_id: str) -> dict:
+#     q = (
+#         select(User, UserManualProfile)
+#         .join(UserManualProfile, UserManualProfile.user_id == User.user_id, isouter=True)
+#         .where(User.user_id == user_id)
+#     )
+#     r = await db.execute(q)
+#     row = r.first()
+#     if not row:
+#         return {}
+
+#     user, prof = row  # prof can be None
+#     out = {
+#         "user": {
+#             "user_id": user.user_id,
+#             "name": user.name,
+#             "email": user.email,
+#             "phone_number": user.phone_number,
+#             "telegram_id": user.telegram_id,
+#         },
+#         "profile": None
+#     }
+#     if prof:
+#         out["profile"] = {
+#             "user_id": prof.user_id,
+#             "sizes": prof.sizes,
+#             "fit": prof.fit,
+#             "style": prof.style,
+#             "colors": prof.colors,
+#             "price_min": prof.price_min,
+#             "price_max": prof.price_max,
+#             "preferred_store": prof.preferred_store,
+#             "city": prof.city,
+#             "brand_prefs": prof.brand_prefs,
+#             "notify_channel": prof.notify_channel,
+#             "measurements": prof.measurements,
+#             "gender": prof.gender,
+#             "updated_at": str(prof.updated_at),
+#         }
+#     return out
+
+# async def upsert_manual_profile(db: AsyncSession, user_id: str, patch: Dict) -> Dict:
+#     cur = await get_manual_profile(db, user_id)
+#     data = {
+#         "sizes": patch.get("sizes"),
+#         "fit": patch.get("fit"),
+#         "style": patch.get("style"),
+#         "colors": patch.get("colors"),
+#         "price_min": patch.get("price_min"),
+#         "price_max": patch.get("price_max"),
+#         "preferred_store": patch.get("preferred_store"),
+#         "city": patch.get("city"),
+#         "brand_prefs": patch.get("brand_prefs"),
+#         "notify_channel": patch.get("notify_channel"),
+#         "measurements": patch.get("measurements"),
+#         "gender": patch.get("gender"),
+#     }
+#     if cur:
+#         stmt = update(UserManualProfile).where(UserManualProfile.user_id==user_id).values(**data)
+#         await db.execute(stmt)
+#     else:
+#         stmt = insert(UserManualProfile).values(user_id=user_id, **data)
+#         await db.execute(stmt)
+#     await db.commit()
+#     obj = await get_manual_profile(db, user_id)
+#     return {
+#         "user_id": user_id,
+#         "sizes": obj.sizes, "fit": obj.fit, "style": obj.style, "colors": obj.colors,
+#         "price_min": obj.price_min, "price_max": obj.price_max,
+#         "preferred_store": obj.preferred_store, "city": obj.city,
+#         "brand_prefs": obj.brand_prefs, "notify_channel": obj.notify_channel, "measurements": obj.measurements,
+#         "gender": obj.gender,
+#         "updated_at": str(obj.updated_at)
+#     }
+
+# async def delete_manual_keys(db: AsyncSession, user_id: str, keys: List[str]) -> Dict:
+#     cur = await get_manual_profile(db, user_id)
+#     if not cur:
+#         return {}
+#     new_data = {}
+#     for k in ["sizes","fit","style","colors","price_min","price_max","preferred_store","city","brand_prefs","notify_channel","measurements","gender"]:
+#         if k in keys:
+#             continue
+#         new_data[k] = getattr(cur, k)
+#     stmt = update(UserManualProfile).where(UserManualProfile.user_id==user_id).values(**new_data)
+#     await db.execute(stmt)
+#     await db.commit()
+#     out = await get_manual_profile(db, user_id)
+#     return {
+#         "user_id": user_id,
+#         "sizes": out.sizes, "fit": out.fit, "style": out.style, "colors": out.colors,
+#         "price_min": out.price_min, "price_max": out.price_max,
+#         "preferred_store": out.preferred_store, "city": out.city,
+#         "brand_prefs": out.brand_prefs, "notify_channel": out.notify_channel, "measurements": out.measurements,
+#         "gender": out.gender,
+#         "updated_at": str(out.updated_at)
+#     }
+
+# ORM row (internal use)
+async def get_manual_profile_row(db: AsyncSession, user_id: str) -> Optional[UserManualProfile]:
+    q = select(UserManualProfile).where(UserManualProfile.user_id == user_id)
+    r = await db.execute(q)
+    return r.scalar_one_or_none()
+
+# Joined dict (API responses)
+async def get_manual_profile_with_user(db: AsyncSession, user_id: str) -> dict:
+    q = (
+        select(User, UserManualProfile)
+        .join(UserManualProfile, UserManualProfile.user_id == User.user_id, isouter=True)
+        .where(User.user_id == user_id)
+    )
+    r = await db.execute(q)
+    row = r.first()
+    if not row:
+        return {}
+    user, prof = row
+    out = {
+        "user": {
+            "user_id": user.user_id,
+            "name": user.name,
+            "email": user.email,
+            "phone_number": user.phone_number,
+            "telegram_id": user.telegram_id,
+        },
+        "profile": None
+    }
+    if prof:
+        out["profile"] = {
+            "user_id": prof.user_id,
+            "sizes": prof.sizes,
+            "fit": prof.fit,
+            "style": prof.style,
+            "colors": prof.colors,
+            "price_min": prof.price_min,
+            "price_max": prof.price_max,
+            "preferred_store": prof.preferred_store,
+            "city": prof.city,
+            "brand_prefs": prof.brand_prefs,
+            "notify_channel": prof.notify_channel,
+            "measurements": prof.measurements,
+            "gender": prof.gender,
+            "updated_at": str(prof.updated_at),
+        }
+    return out
+
+async def upsert_manual_profile(db: AsyncSession, user_id: str, patch: Dict) -> Dict:
+    cur = await get_manual_profile_row(db, user_id)
+    data = {
+        "sizes": patch.get("sizes"),
+        "fit": patch.get("fit"),
+        "style": patch.get("style"),
+        "colors": patch.get("colors"),
+        "price_min": patch.get("price_min"),
+        "price_max": patch.get("price_max"),
+        "preferred_store": patch.get("preferred_store"),
+        "city": patch.get("city"),
+        "brand_prefs": patch.get("brand_prefs"),
+        "notify_channel": patch.get("notify_channel"),
+        "measurements": patch.get("measurements"),
+        "gender": patch.get("gender"),
+    }
+    if cur:
+        await db.execute(
+            update(UserManualProfile)
+            .where(UserManualProfile.user_id == user_id)
+            .values(**data)
+        )
+    else:
+        await db.execute(insert(UserManualProfile).values(user_id=user_id, **data))
+    await db.commit()
+    return await get_manual_profile_with_user(db, user_id)
+
+async def delete_manual_keys(db: AsyncSession, user_id: str, keys: List[str]) -> Dict:
+    cur = await get_manual_profile_row(db, user_id)
+    if not cur:
+        return await get_manual_profile_with_user(db, user_id)
+
+    # When "deleting", set to None (or {} / [] if you prefer).
+    fields = ["sizes","fit","style","colors","price_min","price_max",
+              "preferred_store","city","brand_prefs","notify_channel",
+              "measurements","gender"]
+    new_data = {}
+    for k in fields:
+        if k in keys:
+            new_data[k] = None
+        else:
+            new_data[k] = getattr(cur, k)
+
+    await db.execute(
+        update(UserManualProfile)
+        .where(UserManualProfile.user_id == user_id)
+        .values(**new_data)
+    )
+    await db.commit()
+    return await get_manual_profile_with_user(db, user_id)

@@ -86,6 +86,7 @@ class SignupIn(BaseModel):
     name: str
     email: EmailStr
     password: str
+    phone_number: str
 
 class TokenOut(BaseModel):
     access_token: str
@@ -106,7 +107,11 @@ async def signup(payload: SignupIn, db: AsyncSession = Depends(get_db)):
     existing = await crud.get_user_by_email(db, payload.email)
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
-    user = await crud.create_user(db, payload.name, payload.email, payload.password)
+    phone_number = payload.phone_number.strip()
+    if not phone_number.startswith("+"):
+        phone_number = f"+91{phone_number}"
+        
+    user = await crud.create_user(db, payload.name, payload.email, payload.password, phone_number)
     token = create_access_token({"sub": user.user_id})
     return {"access_token": token, "token_type": "bearer"}
 

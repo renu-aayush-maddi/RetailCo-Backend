@@ -75,6 +75,7 @@ class Inventory(Base):
     store_id = Column(String, index=True)
     stock = Column(Integer, default=0)
     reserved = Column(Integer, default=0)
+    location = Column(String, nullable=False)
     last_updated = Column(TIMESTAMP, server_default=func.now())
 
 class User(Base):
@@ -109,3 +110,23 @@ class ChatHistory(Base):
     intent = Column(String, nullable=True)
     results = Column(JSON, nullable=True)
     created_at = Column(TIMESTAMP, server_default=func.now())
+    
+    
+class UserManualProfile(Base):
+    __tablename__ = "user_manual_profile"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(String, ForeignKey("users.user_id", ondelete="CASCADE"), index=True, unique=True)
+    sizes = Column(JSON)
+    fit = Column(String)
+    style = Column(JSON)
+    colors = Column(JSON)
+    price_min = Column(Integer)
+    price_max = Column(Integer)
+    preferred_store = Column(String)
+    city = Column(String)
+    brand_prefs = Column(JSON)
+    notify_channel = Column(String)
+    measurements = Column(JSON)
+    gender = Column(String)
+    updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
+

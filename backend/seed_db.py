@@ -45,7 +45,8 @@ async def seed():
                 product_id=rec["product_id"],
                 store_id=rec["store_id"],
                 stock=rec.get("stock",0),
-                reserved=rec.get("reserved",0)
+                reserved=rec.get("reserved",0),
+                location=rec["location"]
             )
             session.add(inv)
 

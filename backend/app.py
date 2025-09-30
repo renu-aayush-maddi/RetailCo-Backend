@@ -348,10 +348,11 @@ origins = [
     "http://127.0.0.1:5173",
     # add your deployed frontend domain(s) here
     # "https://yourapp.netlify.app",
+    
 ]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["http://*", "https://*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -66,6 +66,7 @@ class Product(Base):
     images = Column(JSON)
     attributes = Column(JSON)
     tags = Column(JSON)
+    description = Column(Text)
     created_at = Column(TIMESTAMP, server_default=func.now())
 
 class Inventory(Base):
@@ -130,3 +131,22 @@ class UserManualProfile(Base):
     gender = Column(String)
     updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
 
+
+
+
+class Cart(Base):
+    __tablename__ = "carts"
+    cart_id = Column(String, primary_key=True)
+    user_id = Column(String, index=True)
+    channel = Column(String)  # "web" | "app" | "whatsapp" | "kiosk"
+    created_at = Column(TIMESTAMP, server_default=func.now())
+    updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
+
+class CartItem(Base):
+    __tablename__ = "cart_items"
+    cart_item_id = Column(String, primary_key=True)
+    cart_id = Column(String, ForeignKey("carts.cart_id", ondelete="CASCADE"), index=True)
+    product_id = Column(String, index=True)   # MVP: style-level, OK for now
+    qty = Column(Integer, default=1)
+    price_at_add = Column(Numeric(10,2))
+    meta = Column(JSON)  # later: size/color/fit, source="rec", etc.

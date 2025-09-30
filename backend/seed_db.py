@@ -55,3 +55,51 @@ async def seed():
 
 if __name__ == "__main__":
     asyncio.run(seed())
+
+
+
+
+
+
+# # backend/seed_db.py
+# import sys, asyncio, json
+# from pathlib import Path
+# from dotenv import load_dotenv
+
+# PROJECT_ROOT = Path(__file__).resolve().parent.parent
+# sys.path.insert(0, str(PROJECT_ROOT))
+
+# load_dotenv()
+
+# from backend.db import engine, AsyncSessionLocal, Base
+# from backend.models import Product
+
+# DATA_DIR = Path(__file__).resolve().parent / "data"
+# PRODUCTS_FILE = DATA_DIR / "products.json"
+
+# async def seed():
+#     async with engine.begin() as conn:
+#         await conn.run_sync(Base.metadata.create_all)
+
+#     async with AsyncSessionLocal() as session:
+#         with open(PRODUCTS_FILE, "r", encoding="utf-8") as f:
+#             products = json.load(f)
+
+#         for p in products:
+#             session.merge(Product(
+#                 product_id=p["product_id"],
+#                 name=p["name"],
+#                 category=p.get("category"),
+#                 price=p["price"],
+#                 images=p.get("images"),
+#                 attributes=p.get("attributes"),
+#                 tags=p.get("tags"),
+#                 description=p.get("description")
+#             ))
+
+#         await session.commit()
+
+#     print("Seeded DB with products")
+
+# if __name__ == "__main__":
+#     asyncio.run(seed())

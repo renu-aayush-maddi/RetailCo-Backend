@@ -329,6 +329,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend import crud
 from jose import jwt, JWTError
 
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
@@ -466,6 +468,65 @@ async def reset_session(channel: str = Query("web"), user_id: str = Depends(get_
     empty = {"session_id": sid, "memory": {}, "history": [], "last_updated": __import__("time").time()}
     await save_session(sid, empty, ttl_seconds=60*60*24*7)
     return {"ok": True, "session_id": sid}
+
+
+
+
+
+
+
+
+
+############cart############################################
+from pydantic import BaseModel
+from typing import Optional
+from backend.agents import cart_agent
+from backend.agents.master_graph import load_session as load_session_from_redis
+
+class CartAddIn(BaseModel):
+    product_id: Optional[str] = None
+    from_first_rec: Optional[bool] = False
+    qty: Optional[int] = 1
+    channel: Optional[str] = "web"
+    
+@app.post("/cart/add")
+async def cart_add(
+    payload: CartAddIn,
+    user_id: str = Depends(get_user_from_token),
+):
+    channel = (payload.channel or "web").lower()
+    if payload.from_first_rec:
+        sid = f"user:{user_id}:{channel}"
+        s = await load_session_from_redis(sid)
+        last = (s.get("history") or [])[-1] if (s.get("history")) else None
+        recs = ((last or {}).get("results") or {}).get("recommendations", {}).get("recs", []) if last else []
+        if not recs:
+            raise HTTPException(status_code=400, detail="No recommendations to add.")
+        summary = await cart_agent.add_first_rec_to_cart(user_id, channel, recs[0], qty=payload.qty or 1)
+        return {"ok": True, "cart": summary}
+    else:
+        if not payload.product_id:
+            raise HTTPException(status_code=400, detail="product_id required")
+        summary = await cart_agent.add_specific_to_cart(user_id, channel, payload.product_id, qty=payload.qty or 1)
+        return {"ok": True, "cart": summary}
+
+@app.get("/cart/summary")
+async def cart_summary(
+    channel: str = Query("web"),
+    user_id: str = Depends(get_user_from_token),
+):
+    summary = await cart_agent.get_cart_summary(user_id, channel.lower())
+    return {"ok": True, "cart": summary}
+
+@app.delete("/cart/item/{cart_item_id}")
+async def cart_remove_item(
+    cart_item_id: str,
+    channel: str = Query("web"),
+    user_id: str = Depends(get_user_from_token),
+):
+    summary = await cart_agent.remove_item(user_id, channel.lower(), cart_item_id)
+    return {"ok": True, "cart": summary}
+
 
 @app.get("/health")
 async def health():

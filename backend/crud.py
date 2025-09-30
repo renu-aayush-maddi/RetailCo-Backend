@@ -100,9 +100,10 @@
 
 
 # backend/crud.py
-from sqlalchemy import select, insert, update, text
+from sqlalchemy import select, insert, update, text,delete
 from sqlalchemy.ext.asyncio import AsyncSession
-from .models import Product, Inventory, Order, User, ChatHistory ,UserManualProfile
+
+from .models import Product, Inventory, Order, User, ChatHistory ,UserManualProfile,Cart, CartItem
 from typing import List, Dict, Optional
 import uuid
 from passlib.context import CryptContext
@@ -501,3 +502,43 @@ async def delete_manual_keys(db: AsyncSession, user_id: str, keys: List[str]) ->
     )
     await db.commit()
     return await get_manual_profile_with_user(db, user_id)
+
+
+
+
+######################cart####################
+
+async def get_or_create_cart(db: AsyncSession, user_id: str, channel: str) -> Cart:
+    q = select(Cart).where(Cart.user_id == user_id, Cart.channel == channel)
+    r = await db.execute(q)
+    cart = r.scalar_one_or_none()
+    if cart:
+        return cart
+    cart_id = "CART-" + uuid.uuid4().hex[:8]
+    await db.execute(insert(Cart).values(cart_id=cart_id, user_id=user_id, channel=channel))
+    await db.commit()
+    q2 = select(Cart).where(Cart.cart_id == cart_id)
+    r2 = await db.execute(q2)
+    return r2.scalar_one_or_none()
+
+async def add_item_to_cart(db: AsyncSession, cart_id: str, product_id: str, price: float, qty: int = 1, meta: dict = None):
+    cart_item_id = "CI-" + uuid.uuid4().hex[:8]
+    await db.execute(insert(CartItem).values(
+        cart_item_id=cart_item_id, cart_id=cart_id, product_id=product_id,
+        qty=qty, price_at_add=price, meta=meta or {}
+    ))
+    await db.commit()
+    return cart_item_id
+
+async def get_cart_items(db: AsyncSession, cart_id: str):
+    q = select(CartItem).where(CartItem.cart_id == cart_id)
+    r = await db.execute(q)
+    return r.scalars().all()
+
+async def remove_cart_item(db: AsyncSession, cart_item_id: str):
+    await db.execute(delete(CartItem).where(CartItem.cart_item_id == cart_item_id))
+    await db.commit()
+
+async def clear_cart(db: AsyncSession, cart_id: str):
+    await db.execute(delete(CartItem).where(CartItem.cart_id == cart_id))
+    await db.commit()

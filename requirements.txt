@@ -1,111 +1,154 @@
-# fastapi>=0.100.0
-# uvicorn[standard]==0.22.0
-# sqlalchemy>=2.0,<2.1
-# asyncpg==0.27.0
-# alembic==1.11.1
-# pydantic==2.5.1
-# python-dotenv==1.0.0
-# openai==1.0.0
-# httpx==0.24.0
-# redis
-# langchain
-# sentence-transformers==2.2.2
+# # fastapi>=0.100.0
+# # uvicorn[standard]==0.22.0
+# # sqlalchemy>=2.0,<2.1
+# # asyncpg==0.27.0
+# # alembic==1.11.1
+# # pydantic==2.5.1
+# # python-dotenv==1.0.0
+# # openai==1.0.0
+# # httpx==0.24.0
+# # redis
+# # langchain
+# # sentence-transformers==2.2.2
+# # aiofiles==23.1.0
+
+
+
+# # passlib[bcrypt]
+# # python-jose[cryptography]
+# # email-validator
+
+
+
+
 # aiofiles==23.1.0
+# aiohappyeyeballs==2.6.1
+# aiohttp==3.12.15
+# aiosignal==1.4.0
+# alembic==1.11.1
+# annotated-types==0.7.0
+# anyio==3.7.1
+# asyncpg==0.27.0
+# attrs==25.3.0
+# bcrypt==4.3.0
+# certifi==2025.8.3
+# cffi==2.0.0
+# charset-normalizer==3.4.3
+# click==8.3.0
+# colorama==0.4.6
+# cryptography==46.0.1
+# distro==1.9.0
+# dnspython==2.8.0
+# ecdsa==0.19.1
+# email-validator==2.3.0
+# fastapi==0.117.1
+# filelock==3.19.1
+# frozenlist==1.7.0
+# fsspec==2025.9.0
+# greenlet==3.2.4
+# h11==0.14.0
+# httpcore==0.17.3
+# httptools==0.6.4
+# httpx==0.24.0
+# huggingface-hub==0.35.0
+# idna==3.10
+# Jinja2==3.1.6
+# joblib==1.5.2
+# jsonpatch==1.33
+# jsonpointer==3.0.0
+# langchain==0.2.17
+# langchain-core==0.2.43
+# langchain-text-splitters==0.2.4
+# langsmith==0.1.147
+# Mako==1.3.10
+# MarkupSafe==3.0.2
+# mpmath==1.3.0
+# multidict==6.6.4
+# networkx==3.5
+# nltk==3.9.1
+# numpy==1.26.4
+# openai==1.0.0
+# orjson==3.11.3
+# packaging==24.2
+# passlib==1.7.4
+# pillow==11.3.0
+# propcache==0.3.2
+# psycopg2==2.9.10
+# pyasn1==0.6.1
+# pycparser==2.23
+# pydantic==2.7.4
+# pydantic_core==2.14.3
+# python-dotenv==1.0.0
+# python-jose==3.5.0
+# PyYAML==6.0.2
+# redis==6.4.0
+# regex==2025.9.18
+# requests==2.32.5
+# requests-toolbelt==1.0.0
+# rsa==4.9.1
+# safetensors==0.6.2
+# scikit-learn==1.7.2
+# scipy==1.16.2
+# sentence-transformers==2.2.2
+# sentencepiece==0.2.1
+# six==1.17.0
+# sniffio==1.3.1
+# SQLAlchemy==2.0.43
+# starlette==0.48.0
+# sympy==1.14.0
+# tenacity==8.5.0
+# threadpoolctl==3.6.0
+# tokenizers==0.22.1
+# torch==2.8.0
+# torchvision==0.23.0
+# tqdm==4.67.1
+# transformers==4.56.2
+# typing_extensions==4.15.0
+# urllib3==2.5.0
+# uvicorn==0.22.0
+# watchfiles==1.1.0
+# websockets==15.0.1
+# yarl==1.20.1
 
 
 
-# passlib[bcrypt]
-# python-jose[cryptography]
-# email-validator
 
 
-
-
-aiofiles==23.1.0
-aiohappyeyeballs==2.6.1
-aiohttp==3.12.15
-aiosignal==1.4.0
-alembic==1.11.1
-annotated-types==0.7.0
-anyio==3.7.1
-asyncpg==0.27.0
-attrs==25.3.0
-bcrypt==4.3.0
-certifi==2025.8.3
-cffi==2.0.0
-charset-normalizer==3.4.3
-click==8.3.0
-colorama==0.4.6
-cryptography==46.0.1
-distro==1.9.0
-dnspython==2.8.0
-ecdsa==0.19.1
-email-validator==2.3.0
-fastapi==0.117.1
-filelock==3.19.1
-frozenlist==1.7.0
-fsspec==2025.9.0
-greenlet==3.2.4
-h11==0.14.0
-httpcore==0.17.3
-httptools==0.6.4
-httpx==0.24.0
-huggingface-hub==0.35.0
-idna==3.10
-Jinja2==3.1.6
-joblib==1.5.2
-jsonpatch==1.33
-jsonpointer==3.0.0
-langchain==0.2.17
-langchain-core==0.2.43
-langchain-text-splitters==0.2.4
-langsmith==0.1.147
-Mako==1.3.10
-MarkupSafe==3.0.2
-mpmath==1.3.0
-multidict==6.6.4
-networkx==3.5
-nltk==3.9.1
-numpy==1.26.4
-openai==1.0.0
-orjson==3.11.3
-packaging==24.2
-passlib==1.7.4
-pillow==11.3.0
-propcache==0.3.2
-psycopg2==2.9.10
-pyasn1==0.6.1
-pycparser==2.23
-pydantic==2.5.1
-pydantic_core==2.14.3
-python-dotenv==1.0.0
-python-jose==3.5.0
-PyYAML==6.0.2
-redis==6.4.0
-regex==2025.9.18
-requests==2.32.5
-requests-toolbelt==1.0.0
-rsa==4.9.1
-safetensors==0.6.2
-scikit-learn==1.7.2
-scipy==1.16.2
-sentence-transformers==2.2.2
-sentencepiece==0.2.1
-six==1.17.0
-sniffio==1.3.1
+# --- Core web stack ---
+fastapi==0.115.6
+uvicorn[standard]==0.30.6
 SQLAlchemy==2.0.43
-starlette==0.48.0
-sympy==1.14.0
-tenacity==8.5.0
-threadpoolctl==3.6.0
-tokenizers==0.22.1
-torch==2.8.0
-torchvision==0.23.0
-tqdm==4.67.1
-transformers==4.56.2
-typing_extensions==4.15.0
-urllib3==2.5.0
-uvicorn==0.22.0
+asyncpg==0.27.0
+alembic==1.11.1
+python-dotenv==1.0.0
+orjson==3.11.3
+
+# --- Auth / security ---
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+email-validator==2.3.0
+bcrypt==4.3.0
+cryptography==42.0.8
+
+# --- Async / I/O ---
+aiofiles==23.1.0
+aiohttp==3.12.15
+httpx==0.24.0
+anyio==3.7.1
 watchfiles==1.1.0
+httptools==0.6.4
 websockets==15.0.1
-yarl==1.20.1
+
+# --- Utilities ---
+redis==6.4.0
+idna==3.10
+requests==2.32.3
+typing_extensions==4.12.2
+click==8.1.7
+
+# --- ORM / Templates ---
+Mako==1.3.10
+Jinja2==3.1.4
+
+# --- Validation ---
+pydantic==2.7.4    # pulls the right pydantic-core automatically

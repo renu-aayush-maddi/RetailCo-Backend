@@ -347,6 +347,7 @@ origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "https://coruscating-faun-e8a4fc.netlify.app",
+    "https://retailco-sales.netlify.app/"
     # add your deployed frontend domain(s) here
     # "https://yourapp.netlify.app",
     

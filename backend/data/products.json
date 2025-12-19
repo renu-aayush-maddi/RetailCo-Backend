@@ -1,202 +1,202 @@
 [
   {
-    "product_id": "P001",
-    "name": "Crew Neck T-Shirt",
-    "category": "Men>Shirts",
-    "price": 799,
-    "description": "Classic cotton crew neck tee in black with a soft handfeel. Everyday basic for layering or solo wear.",
-    "images": ["https://images.pexels.com/photos/8532638/pexels-photo-8532638.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
-    "attributes": { "color": "black", "sizes": ["S","M","L","XL"], "fabric": "100% cotton", "fit": "regular" },
-    "tags": ["casual","cotton","basic"]
-  },
-  {
-    "product_id": "P002",
-    "name": "Oxford Dress Shirt",
-    "category": "Men>Shirts",
-    "price": 1499,
-    "description": "Crisp white oxford shirt with button-down collar. Office-ready and easy to dress up or down.",
-    "images": ["https://images.pexels.com/photos/31996559/pexels-photo-31996559.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
-    "attributes": { "color": "white", "sizes": ["38","39","40","42","44"], "fabric": "cotton oxford", "fit": "slim" },
-    "tags": ["formal","workwear","oxford"]
-  },
-  {
-    "product_id": "P003",
-    "name": "Striped Linen Shirt",
-    "category": "Men>Shirts",
-    "price": 1799,
-    "description": "Breathable linen-blend shirt with subtle stripes. Ideal for warm weather and resort looks.",
-    "images": ["https://images.pexels.com/photos/10689371/pexels-photo-10689371.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
-    "attributes": { "color": "beige/white", "sizes": ["S","M","L","XL"], "fabric": "linen blend", "fit": "relaxed" },
-    "tags": ["summer","linen","breathable"]
-  },
-  {
-    "product_id": "P004",
-    "name": "Everyday Polo Tee",
-    "category": "Men>Shirts",
-    "price": 999,
-    "description": "Smart casual polo tee with rib collar and two-button placket. Great for Friday dressing.",
-    "images": ["https://images.pexels.com/photos/8532611/pexels-photo-8532611.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
-    "attributes": { "color": "black", "sizes": ["S","M","L","XL"], "fabric": "cotton pique", "fit": "regular" },
-    "tags": ["polo","smart-casual"]
-  },
-  {
-    "product_id": "P005",
-    "name": "Chino Trousers",
-    "category": "Men>Trousers",
-    "price": 1699,
-    "description": "Mid-rise chinos with a slight taper and stretch for comfort. Weekday to weekend ready.",
-    "images": ["https://images.pexels.com/photos/17720471/pexels-photo-17720471.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
-    "attributes": { "color": "khaki", "sizes": ["30","32","34","36"], "fabric": "cotton stretch", "fit": "tapered" },
-    "tags": ["chinos","stretch","versatile"]
-  },
-  {
-    "product_id": "P006",
-    "name": "Light Wash Jeans",
-    "category": "Men>Denim",
-    "price": 1999,
-    "description": "Light-wash denim with a lived-in look and just-right stretch for all-day comfort.",
-    "images": ["https://images.pexels.com/photos/17720471/pexels-photo-17720471.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
-    "attributes": { "color": "light blue", "sizes": ["30","32","34","36"], "fabric": "denim stretch", "fit": "slim" },
-    "tags": ["jeans","light-wash","stretch"]
-  },
-  {
-    "product_id": "P007",
-    "name": "Tech Joggers",
-    "category": "Men>Bottoms",
-    "price": 1499,
-    "description": "Athleisure joggers with elastic waist and cuffed hem. Lightweight and travel friendly.",
-    "images": ["https://images.pexels.com/photos/19733576/pexels-photo-19733576.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
-    "attributes": { "color": "charcoal", "sizes": ["S","M","L","XL"], "fabric": "poly-cotton", "fit": "tapered" },
-    "tags": ["athleisure","joggers","travel"]
-  },
-  {
-    "product_id": "P008",
-    "name": "Leather Dress Belt",
+    "product_id": "P021",
+    "name": "Minimalist Analog Watch",
     "category": "Men>Accessories",
-    "price": 1299,
-    "description": "Full-grain leather belt with brushed metal buckle. Pairs with chinos or suits.",
+    "price": 3499,
+    "description": "Sleek analog watch with a genuine leather strap and minimalist white dial. Timeless elegance.",
+    "images": ["https://images.pexels.com/photos/277390/pexels-photo-277390.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "color": "brown/white", "type": "analog", "strap": "leather", "water_resistant": "30m" },
+    "tags": ["watch", "classic", "minimalist"]
+  },
+  {
+    "product_id": "P022",
+    "name": "Fitness Smartwatch",
+    "category": "Unisex>Electronics",
+    "price": 4999,
+    "description": "Digital smartwatch with heart rate monitor, step tracker, and silicone band. Your daily fitness companion.",
+    "images": ["https://images.pexels.com/photos/437037/pexels-photo-437037.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "color": "black", "type": "digital", "strap": "silicone", "battery": "7-day" },
+    "tags": ["smartwatch", "fitness", "tech"]
+  },
+  {
+    "product_id": "P023",
+    "name": "Reversible Leather Belt",
+    "category": "Men>Accessories",
+    "price": 1199,
+    "description": "Versatile reversible belt featuring black and brown sides with a swivel buckle.",
     "images": ["https://images.pexels.com/photos/31367059/pexels-photo-31367059.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
-    "attributes": { "color": "tan/black/brown", "sizes": ["32","34","36","38"], "material": "leather" },
-    "tags": ["belt","leather","formal"]
+    "attributes": { "color": "black/brown", "sizes": ["32", "34", "36", "38"], "material": "leather" },
+    "tags": ["belt", "reversible", "formal"]
   },
   {
-    "product_id": "P009",
-    "name": "Lifestyle Sneakers",
+    "product_id": "P024",
+    "name": "Performance Running Shoes",
     "category": "Men>Footwear",
-    "price": 2499,
-    "description": "Modern lifestyle sneakers with cushioned sole and mesh upper for breathability.",
-    "images": ["https://images.pexels.com/photos/2529148/pexels-photo-2529148.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
-    "attributes": { "color": "multi", "sizes": ["7","8","9","10","11"], "upper": "mesh", "closure": "lace-up" },
-    "tags": ["sneakers","casual","comfort"]
+    "price": 3299,
+    "description": "Lightweight running shoes with responsive cushioning and breathable mesh upper.",
+    "images": ["https://images.pexels.com/photos/2529152/pexels-photo-2529152.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "color": "neon green/black", "sizes": ["7", "8", "9", "10", "11"], "sole": "EVA", "type": "running" },
+    "tags": ["running", "sport", "shoes"]
   },
   {
-    "product_id": "P010",
-    "name": "Suede Loafers",
-    "category": "Men>Footwear",
-    "price": 2799,
-    "description": "Dressy slip-on loafers in rich suede with cushioned insole—great for office or evenings.",
-    "images": ["https://images.pexels.com/photos/19733576/pexels-photo-19733576.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
-    "attributes": { "color": "brown", "sizes": ["7","8","9","10","11"], "material": "suede" },
-    "tags": ["loafers","smart","evening"]
+    "product_id": "P025",
+    "name": "Classic Aviator Sunglasses",
+    "category": "Unisex>Accessories",
+    "price": 1599,
+    "description": "Gold-tone metal frames with UV-protected tinted lenses. A retro classic that never fades.",
+    "images": ["https://images.pexels.com/photos/701877/pexels-photo-701877.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "color": "gold/green", "frame": "metal", "lens": "UV400" },
+    "tags": ["sunglasses", "aviator", "summer"]
   },
   {
-    "product_id": "P011",
-    "name": "Sequin Party Dress",
-    "category": "Women>Dresses",
-    "price": 2999,
-    "description": "Statement party dress with shimmering sequin embellishment—made to turn heads.",
-    "images": ["https://images.pexels.com/photos/19733576/pexels-photo-19733576.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
-    "attributes": { "color": "gold/black", "sizes": ["XS","S","M","L"], "length": "midi", "fit": "bodycon" },
-    "tags": ["party","evening","sparkle"]
+    "product_id": "P026",
+    "name": "Structured Leather Tote",
+    "category": "Women>Bags",
+    "price": 4599,
+    "description": "Spacious leather tote bag with sturdy handles and zip closure. Perfect for office essentials.",
+    "images": ["https://images.pexels.com/photos/1152077/pexels-photo-1152077.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "color": "tan", "material": "leather", "closure": "zip", "size": "large" },
+    "tags": ["bag", "tote", "workwear"]
   },
   {
-    "product_id": "P012",
-    "name": "A-Line Day Dress",
-    "category": "Women>Dresses",
-    "price": 2299,
-    "description": "Easy A-line dress with flattering drape—your go-to for brunches and desk-to-dinner.",
-    "images": ["https://images.pexels.com/photos/19733576/pexels-photo-19733576.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
-    "attributes": { "color": "black", "sizes": ["XS","S","M","L","XL"], "length": "knee", "fit": "regular" },
-    "tags": ["daywear","versatile"]
+    "product_id": "P027",
+    "name": "Stiletto Heel Pumps",
+    "category": "Women>Footwear",
+    "price": 2899,
+    "description": "Elegant pointed-toe pumps with a high stiletto heel. The ultimate power shoe.",
+    "images": ["https://images.pexels.com/photos/3782786/pexels-photo-3782786.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "color": "red", "sizes": ["5", "6", "7", "8"], "heel_height": "4 inch", "material": "suede" },
+    "tags": ["heels", "party", "formal"]
   },
   {
-    "product_id": "P013",
-    "name": "Quilted Puffer Jacket",
+    "product_id": "P028",
+    "name": "Vintage Wash Denim Jacket",
     "category": "Women>Outerwear",
-    "price": 3499,
-    "description": "Lightweight quilted puffer with stand collar—warmth without bulk.",
-    "images": ["https://images.pexels.com/photos/19733576/pexels-photo-19733576.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
-    "attributes": { "color": "black", "sizes": ["S","M","L","XL"], "fill": "poly", "features": ["lightweight","warm"] },
-    "tags": ["outerwear","puffer","winter"]
-  },
-  {
-    "product_id": "P014",
-    "name": "Cozy Hoodie",
-    "category": "Women>Tops",
-    "price": 1499,
-    "description": "Ultra-soft fleece hoodie with kangaroo pocket. Lounge, travel, repeat.",
-    "images": ["https://images.pexels.com/photos/12555811/pexels-photo-12555811.png?cs=srgb&fm=jpg&q=80&w=800"],
-    "attributes": { "color": "multi", "sizes": ["XS","S","M","L","XL"], "fabric": "fleece" },
-    "tags": ["hoodie","loungewear","cozy"]
-  },
-  {
-    "product_id": "P015",
-    "name": "Knitted Scarf",
-    "category": "Women>Accessories",
-    "price": 899,
-    "description": "Soft knit scarf to finish your winter looks with a touch of luxury.",
-    "images": ["https://images.pexels.com/photos/26617651/pexels-photo-26617651.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
-    "attributes": { "color": "blush", "material": "acrylic blend", "length": "long" },
-    "tags": ["scarf","winter","accessory"]
-  },
-  {
-    "product_id": "P016",
-    "name": "Stretch Leggings",
-    "category": "Women>Bottoms",
-    "price": 999,
-    "description": "High-rise leggings with four-way stretch—gym-ready and errand-friendly.",
-    "images": ["https://images.pexels.com/photos/19733576/pexels-photo-19733576.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
-    "attributes": { "color": "black", "sizes": ["XS","S","M","L","XL"], "fabric": "nylon/elastane", "rise": "high" },
-    "tags": ["active","leggings","stretch"]
-  },
-  {
-    "product_id": "P017",
-    "name": "Kids Graphic Tee",
-    "category": "Kids>Tops",
-    "price": 599,
-    "description": "Comfy cotton tee with playful graphics—built for play days and picture days.",
-    "images": ["https://images.pexels.com/photos/28259746/pexels-photo-28259746.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
-    "attributes": { "color": "neutrals mix", "sizes": ["2-3Y","4-5Y","6-7Y","8-9Y"], "fabric": "cotton" },
-    "tags": ["kids","graphic","cotton"]
-  },
-  {
-    "product_id": "P018",
-    "name": "Kids Pull-On Shorts",
-    "category": "Kids>Bottoms",
-    "price": 699,
-    "description": "Easy pull-on shorts with soft elastic waist—playground approved.",
-    "images": ["https://images.pexels.com/photos/28259746/pexels-photo-28259746.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
-    "attributes": { "color": "sand", "sizes": ["2-3Y","4-5Y","6-7Y","8-9Y"], "fabric": "cotton knit" },
-    "tags": ["kids","shorts","easy-wear"]
-  },
-  {
-    "product_id": "P019",
-    "name": "Kurta Set",
-    "category": "Ethnic Wear>Women",
     "price": 2499,
-    "description": "Elegant kurta set with breathable fabric—perfect for festive days and family gatherings.",
-    "images": ["https://images.pexels.com/photos/19733576/pexels-photo-19733576.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
-    "attributes": { "color": "black/gold", "sizes": ["XS","S","M","L"], "fabric": "viscose blend" },
-    "tags": ["ethnic","festive","kurta"]
+    "description": "Classic oversized denim jacket with button-front and chest pockets.",
+    "images": ["https://images.pexels.com/photos/7279113/pexels-photo-7279113.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "color": "blue", "sizes": ["XS", "S", "M", "L"], "material": "denim", "fit": "oversized" },
+    "tags": ["jacket", "denim", "casual"]
   },
   {
-    "product_id": "P020",
-    "name": "Wardrobe Essentials Bundle",
-    "category": "Unisex>Bundles",
+    "product_id": "P029",
+    "name": "Gold Plated Pendant",
+    "category": "Women>Jewelry",
+    "price": 999,
+    "description": "Delicate chain necklace with a minimal gold-plated circle pendant.",
+    "images": ["https://images.pexels.com/photos/1395306/pexels-photo-1395306.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "color": "gold", "material": "brass", "plating": "18k gold" },
+    "tags": ["jewelry", "necklace", "gift"]
+  },
+  {
+    "product_id": "P030",
+    "name": "Slim Leather Wallet",
+    "category": "Men>Accessories",
+    "price": 899,
+    "description": "Compact bi-fold wallet with card slots and a currency sleeve. Fits perfectly in pockets.",
+    "images": ["https://images.pexels.com/photos/164624/pexels-photo-164624.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "color": "dark brown", "material": "leather", "slots": "6" },
+    "tags": ["wallet", "leather", "essential"]
+  },
+  {
+    "product_id": "P031",
+    "name": "Cotton Baseball Cap",
+    "category": "Unisex>Accessories",
+    "price": 599,
+    "description": "Adjustable cotton cap with a curved brim. Great for sunny days and casual styling.",
+    "images": ["https://images.pexels.com/photos/1124465/pexels-photo-1124465.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "color": "navy", "size": "one size", "material": "cotton" },
+    "tags": ["hat", "cap", "summer"]
+  },
+  {
+    "product_id": "P032",
+    "name": "Winter Knit Beanie",
+    "category": "Unisex>Accessories",
+    "price": 499,
+    "description": "Warm ribbed knit beanie with a cuffed hem. Essential for cold weather.",
+    "images": ["https://images.pexels.com/photos/3435272/pexels-photo-3435272.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "color": "grey", "size": "one size", "material": "acrylic wool" },
+    "tags": ["beanie", "winter", "warm"]
+  },
+  {
+    "product_id": "P033",
+    "name": "Chelsea Boots",
+    "category": "Men>Footwear",
+    "price": 3999,
+    "description": "Classic leather Chelsea boots with elastic side panels and pull tab.",
+    "images": ["https://images.pexels.com/photos/1598505/pexels-photo-1598505.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "color": "brown", "sizes": ["8", "9", "10", "11"], "material": "leather", "style": "slip-on" },
+    "tags": ["boots", "chelsea", "winter"]
+  },
+  {
+    "product_id": "P034",
+    "name": "Formal Oxford Shoes",
+    "category": "Men>Footwear",
     "price": 3499,
-    "description": "Starter bundle: tee, polo, chinos and belt—curated to cover weekday to weekend.",
-    "images": ["https://images.pexels.com/photos/19733576/pexels-photo-19733576.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
-    "attributes": { "items": ["T-shirt","Polo","Chinos","Belt"], "sizes": ["S","M","L","XL"] },
-    "tags": ["bundle","value","mix-and-match"]
+    "description": "Polished black oxford shoes with closed lacing. The standard for business attire.",
+    "images": ["https://images.pexels.com/photos/293405/pexels-photo-293405.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "color": "black", "sizes": ["7", "8", "9", "10", "11"], "material": "leather", "closure": "lace-up" },
+    "tags": ["shoes", "formal", "office"]
+  },
+  {
+    "product_id": "P035",
+    "name": "Hardshell Carry-On",
+    "category": "Travel>Luggage",
+    "price": 5499,
+    "description": "Durable hardshell cabin suitcase with 360-degree spinner wheels and TSA lock.",
+    "images": ["https://images.pexels.com/photos/1008155/pexels-photo-1008155.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "color": "silver", "size": "20 inch", "material": "polycarbonate" },
+    "tags": ["luggage", "travel", "suitcase"]
+  },
+  {
+    "product_id": "P036",
+    "name": "Noise Cancelling Headphones",
+    "category": "Electronics>Audio",
+    "price": 8999,
+    "description": "Over-ear wireless headphones with active noise cancellation and deep bass.",
+    "images": ["https://images.pexels.com/photos/3394656/pexels-photo-3394656.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "color": "black", "type": "wireless", "battery": "30h" },
+    "tags": ["audio", "headphones", "music"]
+  },
+  {
+    "product_id": "P037",
+    "name": "Non-Slip Yoga Mat",
+    "category": "Fitness>Equipment",
+    "price": 1299,
+    "description": "Eco-friendly yoga mat with non-slip texture and carrying strap.",
+    "images": ["https://images.pexels.com/photos/4056723/pexels-photo-4056723.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "color": "purple", "thickness": "6mm", "material": "TPE" },
+    "tags": ["yoga", "fitness", "home-gym"]
+  },
+  {
+    "product_id": "P038",
+    "name": "Signature Eau de Parfum",
+    "category": "Beauty>Fragrance",
+    "price": 3999,
+    "description": "Long-lasting perfume with notes of jasmine, amber, and cedarwood.",
+    "images": ["https://images.pexels.com/photos/965989/pexels-photo-965989.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "volume": "100ml", "scent_family": "floral-woody" },
+    "tags": ["perfume", "fragrance", "gift"]
+  },
+  {
+    "product_id": "P039",
+    "name": "Pearl Stud Earrings",
+    "category": "Women>Jewelry",
+    "price": 699,
+    "description": "Classic faux pearl studs with gold-tone backing. Simple and sophisticated.",
+    "images": ["https://images.pexels.com/photos/5370647/pexels-photo-5370647.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "color": "white/gold", "style": "stud", "material": "alloy" },
+    "tags": ["earrings", "pearl", "classic"]
+  },
+  {
+    "product_id": "P040",
+    "name": "Wool Blend Scarf",
+    "category": "Unisex>Accessories",
+    "price": 1099,
+    "description": "Soft wool-blend scarf in a plaid pattern to keep you cozy and stylish.",
+    "images": ["https://images.pexels.com/photos/1649691/pexels-photo-1649691.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "color": "red/plaid", "material": "wool blend", "length": "long" },
+    "tags": ["scarf", "winter", "warm"]
   }
 ]

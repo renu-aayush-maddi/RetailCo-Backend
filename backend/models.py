@@ -1,57 +1,9 @@
-# # backend/models.py
-# from sqlalchemy import Column, Integer, String, Numeric, JSON, TIMESTAMP, func
-# from backend.db import Base
-
-
-# class Product(Base):
-#     __tablename__ = "products"
-#     product_id = Column(String, primary_key=True, index=True)
-#     name = Column(String, nullable=False)
-#     category = Column(String, index=True)
-#     price = Column(Numeric(10,2), nullable=False)
-#     images = Column(JSON)
-#     attributes = Column(JSON)
-#     tags = Column(JSON)
-#     created_at = Column(TIMESTAMP, server_default=func.now())
-
-# class Inventory(Base):
-#     __tablename__ = "inventory"
-#     inventory_id = Column(Integer, primary_key=True, autoincrement=True)
-#     product_id = Column(String, nullable=False, index=True)
-#     store_id = Column(String, index=True)
-#     stock = Column(Integer, default=0)
-#     reserved = Column(Integer, default=0)
-#     last_updated = Column(TIMESTAMP, server_default=func.now())
-
-# class User(Base):
-#     __tablename__ = "users"
-#     user_id = Column(String, primary_key=True)
-#     name = Column(String)
-#     phone = Column(String)
-#     email = Column(String)
-#     loyalty_tier = Column(String)
-#     meta = Column(JSON)
-
-# class Order(Base):
-#     __tablename__ = "orders"
-#     order_id = Column(String, primary_key=True)
-#     user_id = Column(String)
-#     items = Column(JSON)
-#     total_amount = Column(Numeric(10,2))
-#     status = Column(String)
-#     fulfillment = Column(String)
-#     created_at = Column(TIMESTAMP, server_default=func.now())
-
-
-
-
-
-
 
 # backend/models.py
 from sqlalchemy import Column, Integer, String, Numeric, JSON, TIMESTAMP, func, Text, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from .db import Base
+# from backend.db import Base
 import uuid
 
 def gen_uuid():
@@ -90,6 +42,9 @@ class User(Base):
     loyalty_tier = Column(String)
     meta = Column(JSON)
     created_at = Column(TIMESTAMP, server_default=func.now())
+    loyalty_points = Column(Integer, default=0)
+    total_spend = Column(Numeric(10,2), default=0)
+
 
 class Order(Base):
     __tablename__ = "orders"
@@ -150,3 +105,41 @@ class CartItem(Base):
     qty = Column(Integer, default=1)
     price_at_add = Column(Numeric(10,2))
     meta = Column(JSON)  # later: size/color/fit, source="rec", etc.
+    
+    
+class Reservation(Base):
+    __tablename__ = "reservations"
+
+    reservation_id = Column(String, primary_key=True)
+    user_id = Column(String, index=True)
+    product_id = Column(String, index=True)
+    store_id = Column(String)
+    date = Column(String)
+    time = Column(String)
+    status = Column(String, default="active")
+    created_at = Column(TIMESTAMP, server_default=func.now())
+    
+    
+    
+    
+    
+# backend/models.py (Add these classes at the bottom)
+
+class ReturnRequest(Base):
+    __tablename__ = "returns"
+    return_id = Column(String, primary_key=True)
+    user_id = Column(String, index=True)
+    order_id = Column(String, index=True)
+    product_id = Column(String)
+    reason = Column(String)
+    status = Column(String, default="requested") # requested, approved, refunded
+    created_at = Column(TIMESTAMP, server_default=func.now())
+
+class Feedback(Base):
+    __tablename__ = "feedback"
+    feedback_id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(String, index=True)
+    order_id = Column(String, index=True)
+    rating = Column(Integer) # 1-5
+    comment = Column(Text, nullable=True)
+    created_at = Column(TIMESTAMP, server_default=func.now())

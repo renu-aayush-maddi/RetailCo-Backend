@@ -1,0 +1,202 @@
+[
+  {
+    "product_id": "P001",
+    "name": "Crew Neck T-Shirt",
+    "category": "Men>Shirts",
+    "price": 799,
+    "description": "Classic cotton crew neck tee in black with a soft handfeel. Everyday basic for layering or solo wear.",
+    "images": ["https://images.pexels.com/photos/8532638/pexels-photo-8532638.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "color": "black", "sizes": ["S","M","L","XL"], "fabric": "100% cotton", "fit": "regular" },
+    "tags": ["casual","cotton","basic"]
+  },
+  {
+    "product_id": "P002",
+    "name": "Oxford Dress Shirt",
+    "category": "Men>Shirts",
+    "price": 1499,
+    "description": "Crisp white oxford shirt with button-down collar. Office-ready and easy to dress up or down.",
+    "images": ["https://images.pexels.com/photos/31996559/pexels-photo-31996559.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "color": "white", "sizes": ["38","39","40","42","44"], "fabric": "cotton oxford", "fit": "slim" },
+    "tags": ["formal","workwear","oxford"]
+  },
+  {
+    "product_id": "P003",
+    "name": "Striped Linen Shirt",
+    "category": "Men>Shirts",
+    "price": 1799,
+    "description": "Breathable linen-blend shirt with subtle stripes. Ideal for warm weather and resort looks.",
+    "images": ["https://images.pexels.com/photos/10689371/pexels-photo-10689371.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "color": "beige/white", "sizes": ["S","M","L","XL"], "fabric": "linen blend", "fit": "relaxed" },
+    "tags": ["summer","linen","breathable"]
+  },
+  {
+    "product_id": "P004",
+    "name": "Everyday Polo Tee",
+    "category": "Men>Shirts",
+    "price": 999,
+    "description": "Smart casual polo tee with rib collar and two-button placket. Great for Friday dressing.",
+    "images": ["https://images.pexels.com/photos/8532611/pexels-photo-8532611.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "color": "black", "sizes": ["S","M","L","XL"], "fabric": "cotton pique", "fit": "regular" },
+    "tags": ["polo","smart-casual"]
+  },
+  {
+    "product_id": "P005",
+    "name": "Chino Trousers",
+    "category": "Men>Trousers",
+    "price": 1699,
+    "description": "Mid-rise chinos with a slight taper and stretch for comfort. Weekday to weekend ready.",
+    "images": ["https://images.pexels.com/photos/17720471/pexels-photo-17720471.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "color": "khaki", "sizes": ["30","32","34","36"], "fabric": "cotton stretch", "fit": "tapered" },
+    "tags": ["chinos","stretch","versatile"]
+  },
+  {
+    "product_id": "P006",
+    "name": "Light Wash Jeans",
+    "category": "Men>Denim",
+    "price": 1999,
+    "description": "Light-wash denim with a lived-in look and just-right stretch for all-day comfort.",
+    "images": ["https://images.pexels.com/photos/17720471/pexels-photo-17720471.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "color": "light blue", "sizes": ["30","32","34","36"], "fabric": "denim stretch", "fit": "slim" },
+    "tags": ["jeans","light-wash","stretch"]
+  },
+  {
+    "product_id": "P007",
+    "name": "Tech Joggers",
+    "category": "Men>Bottoms",
+    "price": 1499,
+    "description": "Athleisure joggers with elastic waist and cuffed hem. Lightweight and travel friendly.",
+    "images": ["https://images.pexels.com/photos/19733576/pexels-photo-19733576.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "color": "charcoal", "sizes": ["S","M","L","XL"], "fabric": "poly-cotton", "fit": "tapered" },
+    "tags": ["athleisure","joggers","travel"]
+  },
+  {
+    "product_id": "P008",
+    "name": "Leather Dress Belt",
+    "category": "Men>Accessories",
+    "price": 1299,
+    "description": "Full-grain leather belt with brushed metal buckle. Pairs with chinos or suits.",
+    "images": ["https://images.pexels.com/photos/31367059/pexels-photo-31367059.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "color": "tan/black/brown", "sizes": ["32","34","36","38"], "material": "leather" },
+    "tags": ["belt","leather","formal"]
+  },
+  {
+    "product_id": "P009",
+    "name": "Lifestyle Sneakers",
+    "category": "Men>Footwear",
+    "price": 2499,
+    "description": "Modern lifestyle sneakers with cushioned sole and mesh upper for breathability.",
+    "images": ["https://images.pexels.com/photos/2529148/pexels-photo-2529148.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "color": "multi", "sizes": ["7","8","9","10","11"], "upper": "mesh", "closure": "lace-up" },
+    "tags": ["sneakers","casual","comfort"]
+  },
+  {
+    "product_id": "P010",
+    "name": "Suede Loafers",
+    "category": "Men>Footwear",
+    "price": 2799,
+    "description": "Dressy slip-on loafers in rich suede with cushioned insole—great for office or evenings.",
+    "images": ["https://images.pexels.com/photos/19733576/pexels-photo-19733576.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "color": "brown", "sizes": ["7","8","9","10","11"], "material": "suede" },
+    "tags": ["loafers","smart","evening"]
+  },
+  {
+    "product_id": "P011",
+    "name": "Sequin Party Dress",
+    "category": "Women>Dresses",
+    "price": 2999,
+    "description": "Statement party dress with shimmering sequin embellishment—made to turn heads.",
+    "images": ["https://images.pexels.com/photos/19733576/pexels-photo-19733576.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "color": "gold/black", "sizes": ["XS","S","M","L"], "length": "midi", "fit": "bodycon" },
+    "tags": ["party","evening","sparkle"]
+  },
+  {
+    "product_id": "P012",
+    "name": "A-Line Day Dress",
+    "category": "Women>Dresses",
+    "price": 2299,
+    "description": "Easy A-line dress with flattering drape—your go-to for brunches and desk-to-dinner.",
+    "images": ["https://images.pexels.com/photos/19733576/pexels-photo-19733576.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "color": "black", "sizes": ["XS","S","M","L","XL"], "length": "knee", "fit": "regular" },
+    "tags": ["daywear","versatile"]
+  },
+  {
+    "product_id": "P013",
+    "name": "Quilted Puffer Jacket",
+    "category": "Women>Outerwear",
+    "price": 3499,
+    "description": "Lightweight quilted puffer with stand collar—warmth without bulk.",
+    "images": ["https://images.pexels.com/photos/19733576/pexels-photo-19733576.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "color": "black", "sizes": ["S","M","L","XL"], "fill": "poly", "features": ["lightweight","warm"] },
+    "tags": ["outerwear","puffer","winter"]
+  },
+  {
+    "product_id": "P014",
+    "name": "Cozy Hoodie",
+    "category": "Women>Tops",
+    "price": 1499,
+    "description": "Ultra-soft fleece hoodie with kangaroo pocket. Lounge, travel, repeat.",
+    "images": ["https://images.pexels.com/photos/12555811/pexels-photo-12555811.png?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "color": "multi", "sizes": ["XS","S","M","L","XL"], "fabric": "fleece" },
+    "tags": ["hoodie","loungewear","cozy"]
+  },
+  {
+    "product_id": "P015",
+    "name": "Knitted Scarf",
+    "category": "Women>Accessories",
+    "price": 899,
+    "description": "Soft knit scarf to finish your winter looks with a touch of luxury.",
+    "images": ["https://images.pexels.com/photos/26617651/pexels-photo-26617651.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "color": "blush", "material": "acrylic blend", "length": "long" },
+    "tags": ["scarf","winter","accessory"]
+  },
+  {
+    "product_id": "P016",
+    "name": "Stretch Leggings",
+    "category": "Women>Bottoms",
+    "price": 999,
+    "description": "High-rise leggings with four-way stretch—gym-ready and errand-friendly.",
+    "images": ["https://images.pexels.com/photos/19733576/pexels-photo-19733576.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "color": "black", "sizes": ["XS","S","M","L","XL"], "fabric": "nylon/elastane", "rise": "high" },
+    "tags": ["active","leggings","stretch"]
+  },
+  {
+    "product_id": "P017",
+    "name": "Kids Graphic Tee",
+    "category": "Kids>Tops",
+    "price": 599,
+    "description": "Comfy cotton tee with playful graphics—built for play days and picture days.",
+    "images": ["https://images.pexels.com/photos/28259746/pexels-photo-28259746.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "color": "neutrals mix", "sizes": ["2-3Y","4-5Y","6-7Y","8-9Y"], "fabric": "cotton" },
+    "tags": ["kids","graphic","cotton"]
+  },
+  {
+    "product_id": "P018",
+    "name": "Kids Pull-On Shorts",
+    "category": "Kids>Bottoms",
+    "price": 699,
+    "description": "Easy pull-on shorts with soft elastic waist—playground approved.",
+    "images": ["https://images.pexels.com/photos/28259746/pexels-photo-28259746.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "color": "sand", "sizes": ["2-3Y","4-5Y","6-7Y","8-9Y"], "fabric": "cotton knit" },
+    "tags": ["kids","shorts","easy-wear"]
+  },
+  {
+    "product_id": "P019",
+    "name": "Kurta Set",
+    "category": "Ethnic Wear>Women",
+    "price": 2499,
+    "description": "Elegant kurta set with breathable fabric—perfect for festive days and family gatherings.",
+    "images": ["https://images.pexels.com/photos/19733576/pexels-photo-19733576.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "color": "black/gold", "sizes": ["XS","S","M","L"], "fabric": "viscose blend" },
+    "tags": ["ethnic","festive","kurta"]
+  },
+  {
+    "product_id": "P020",
+    "name": "Wardrobe Essentials Bundle",
+    "category": "Unisex>Bundles",
+    "price": 3499,
+    "description": "Starter bundle: tee, polo, chinos and belt—curated to cover weekday to weekend.",
+    "images": ["https://images.pexels.com/photos/19733576/pexels-photo-19733576.jpeg?cs=srgb&fm=jpg&q=80&w=800"],
+    "attributes": { "items": ["T-shirt","Polo","Chinos","Belt"], "sizes": ["S","M","L","XL"] },
+    "tags": ["bundle","value","mix-and-match"]
+  }
+]

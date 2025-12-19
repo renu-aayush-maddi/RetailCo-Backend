@@ -1,0 +1,25 @@
+[
+  {"product_id": "P001", "store_id": "S1", "stock": 5,  "reserved": 0, "location": "Guntur"},
+  {"product_id": "P002", "store_id": "S1", "stock": 2,  "reserved": 0, "location": "Guntur"},
+  {"product_id": "P003", "store_id": "S1", "stock": 10, "reserved": 0, "location": "Guntur"},
+
+  {"product_id": "P001", "store_id": "S2", "stock": 8,  "reserved": 0, "location": "Hyderabad"},
+  {"product_id": "P002", "store_id": "S2", "stock": 4,  "reserved": 0, "location": "Hyderabad"},
+  {"product_id": "P003", "store_id": "S2", "stock": 7,  "reserved": 0, "location": "Hyderabad"},
+
+  {"product_id": "P001", "store_id": "S3", "stock": 12, "reserved": 0, "location": "Bangalore"},
+  {"product_id": "P002", "store_id": "S3", "stock": 6,  "reserved": 0, "location": "Bangalore"},
+  {"product_id": "P003", "store_id": "S3", "stock": 15, "reserved": 0, "location": "Bangalore"},
+
+  {"product_id": "P001", "store_id": "S4", "stock": 3,  "reserved": 0, "location": "Gurgaon"},
+  {"product_id": "P002", "store_id": "S4", "stock": 9,  "reserved": 0, "location": "Gurgaon"},
+  {"product_id": "P003", "store_id": "S4", "stock": 5,  "reserved": 0, "location": "Gurgaon"},
+
+  {"product_id": "P001", "store_id": "S5", "stock": 7,  "reserved": 0, "location": "Chennai"},
+  {"product_id": "P002", "store_id": "S5", "stock": 11, "reserved": 0, "location": "Chennai"},
+  {"product_id": "P003", "store_id": "S5", "stock": 9,  "reserved": 0, "location": "Chennai"}
+]
+
+
+
+

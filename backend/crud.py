@@ -1,112 +1,16 @@
-# # backend/crud.py
-# from sqlalchemy import select, insert, update
-# from sqlalchemy.ext.asyncio import AsyncSession
-# from .models import Product, Inventory, Order
-# from typing import List, Dict, Optional
-# import uuid
-
-# async def get_product(db: AsyncSession, product_id: str) -> Optional[Product]:
-#     q = select(Product).where(Product.product_id == product_id)
-#     r = await db.execute(q)
-#     return r.scalar_one_or_none()
-
-# async def list_products(db: AsyncSession, limit: int = 50) -> List[Product]:
-#     q = select(Product).limit(limit)
-#     r = await db.execute(q)
-#     return r.scalars().all()
-
-# async def upsert_product(db: AsyncSession, product: Dict):
-#     obj = await get_product(db, product["product_id"])
-#     if obj:
-#         stmt = update(Product).where(Product.product_id==product["product_id"]).values(
-#             name=product.get("name"),
-#             category=product.get("category"),
-#             price=product.get("price"),
-#             images=product.get("images"),
-#             attributes=product.get("attributes"),
-#             tags=product.get("tags")
-#         )
-#         await db.execute(stmt)
-#     else:
-#         stmt = insert(Product).values(**product)
-#         await db.execute(stmt)
-#     await db.commit()
-
-# async def upsert_inventory(db: AsyncSession, inv: Dict):
-#     q = select(Inventory).where(Inventory.product_id==inv["product_id"], Inventory.store_id==inv["store_id"])
-#     r = await db.execute(q)
-#     existing = r.scalar_one_or_none()
-#     if existing:
-#         stmt = update(Inventory).where(Inventory.inventory_id==existing.inventory_id).values(
-#             stock=inv.get("stock", existing.stock),
-#             reserved=inv.get("reserved", existing.reserved)
-#         )
-#         await db.execute(stmt)
-#     else:
-#         stmt = insert(Inventory).values(**inv)
-#         await db.execute(stmt)
-#     await db.commit()
-
-# # backend/crud.py (replace check_and_reserve with this)
-# from sqlalchemy import text
-
-# async def check_and_reserve(db: AsyncSession, product_id: str, store_id: str = "S1", qty: int = 1) -> bool:
-#     """
-#     Atomic check-and-reserve with debug logging.
-#     """
-#     print(f"[CRUD] check_and_reserve called for product_id={product_id}, store_id={store_id}, qty={qty}")
-#     stmt = text("""
-#         UPDATE inventory
-#         SET reserved = reserved + :qty, last_updated = NOW()
-#         WHERE product_id = :product_id
-#           AND store_id = :store_id
-#           AND (stock - reserved) >= :qty
-#         RETURNING inventory_id, stock, reserved
-#     """)
-#     try:
-#         result = await db.execute(stmt, {
-#             "product_id": product_id,
-#             "store_id": store_id,
-#             "qty": qty
-#         })
-#         row = result.first()
-#         if row:
-#             await db.commit()
-#             print(f"[CRUD] reserved succeeded: {row}")
-#             return True
-#         else:
-#             await db.rollback()
-#             print("[CRUD] reserved failed: insufficient stock or condition not met")
-#             return False
-#     except Exception as e:
-#         await db.rollback()
-#         print(f"[CRUD] check_and_reserve ERROR: {e}")
-#         # re-raise to see stack trace in uvicorn logs (optional)
-#         raise
-
-
-
-# async def create_order(db: AsyncSession, user_id: str, items: Dict, total: float, fulfillment: str="ship"):
-#     order_id = "ORD-" + uuid.uuid4().hex[:8]
-#     stmt = insert(Order).values(order_id=order_id, user_id=user_id, items=items, total_amount=total, status="confirmed", fulfillment=fulfillment)
-#     await db.execute(stmt)
-#     await db.commit()
-#     return order_id
-
-
-
-
-
-
 
 # backend/crud.py
 from sqlalchemy import select, insert, update, text,delete
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
 
 from .models import Product, Inventory, Order, User, ChatHistory ,UserManualProfile,Cart, CartItem
 from typing import List, Dict, Optional
 import uuid
 from passlib.context import CryptContext
+# add near top of file
+from decimal import Decimal, InvalidOperation
+from math import floor
 
 
 
@@ -299,113 +203,6 @@ async def upsert_guest_user_by_telegram(db: AsyncSession, telegram_id: str, name
     return r.scalar_one_or_none()
 
 
-#################User Manual Profile#####################
-# async def get_manual_profile(db: AsyncSession, user_id: str) -> Optional[UserManualProfile]:
-#     q = select(UserManualProfile).where(UserManualProfile.user_id == user_id)
-#     r = await db.execute(q)
-#     return r.scalar_one_or_none()
-
-
-
-# async def get_manual_profile_with_user(db: AsyncSession, user_id: str) -> dict:
-#     q = (
-#         select(User, UserManualProfile)
-#         .join(UserManualProfile, UserManualProfile.user_id == User.user_id, isouter=True)
-#         .where(User.user_id == user_id)
-#     )
-#     r = await db.execute(q)
-#     row = r.first()
-#     if not row:
-#         return {}
-
-#     user, prof = row  # prof can be None
-#     out = {
-#         "user": {
-#             "user_id": user.user_id,
-#             "name": user.name,
-#             "email": user.email,
-#             "phone_number": user.phone_number,
-#             "telegram_id": user.telegram_id,
-#         },
-#         "profile": None
-#     }
-#     if prof:
-#         out["profile"] = {
-#             "user_id": prof.user_id,
-#             "sizes": prof.sizes,
-#             "fit": prof.fit,
-#             "style": prof.style,
-#             "colors": prof.colors,
-#             "price_min": prof.price_min,
-#             "price_max": prof.price_max,
-#             "preferred_store": prof.preferred_store,
-#             "city": prof.city,
-#             "brand_prefs": prof.brand_prefs,
-#             "notify_channel": prof.notify_channel,
-#             "measurements": prof.measurements,
-#             "gender": prof.gender,
-#             "updated_at": str(prof.updated_at),
-#         }
-#     return out
-
-# async def upsert_manual_profile(db: AsyncSession, user_id: str, patch: Dict) -> Dict:
-#     cur = await get_manual_profile(db, user_id)
-#     data = {
-#         "sizes": patch.get("sizes"),
-#         "fit": patch.get("fit"),
-#         "style": patch.get("style"),
-#         "colors": patch.get("colors"),
-#         "price_min": patch.get("price_min"),
-#         "price_max": patch.get("price_max"),
-#         "preferred_store": patch.get("preferred_store"),
-#         "city": patch.get("city"),
-#         "brand_prefs": patch.get("brand_prefs"),
-#         "notify_channel": patch.get("notify_channel"),
-#         "measurements": patch.get("measurements"),
-#         "gender": patch.get("gender"),
-#     }
-#     if cur:
-#         stmt = update(UserManualProfile).where(UserManualProfile.user_id==user_id).values(**data)
-#         await db.execute(stmt)
-#     else:
-#         stmt = insert(UserManualProfile).values(user_id=user_id, **data)
-#         await db.execute(stmt)
-#     await db.commit()
-#     obj = await get_manual_profile(db, user_id)
-#     return {
-#         "user_id": user_id,
-#         "sizes": obj.sizes, "fit": obj.fit, "style": obj.style, "colors": obj.colors,
-#         "price_min": obj.price_min, "price_max": obj.price_max,
-#         "preferred_store": obj.preferred_store, "city": obj.city,
-#         "brand_prefs": obj.brand_prefs, "notify_channel": obj.notify_channel, "measurements": obj.measurements,
-#         "gender": obj.gender,
-#         "updated_at": str(obj.updated_at)
-#     }
-
-# async def delete_manual_keys(db: AsyncSession, user_id: str, keys: List[str]) -> Dict:
-#     cur = await get_manual_profile(db, user_id)
-#     if not cur:
-#         return {}
-#     new_data = {}
-#     for k in ["sizes","fit","style","colors","price_min","price_max","preferred_store","city","brand_prefs","notify_channel","measurements","gender"]:
-#         if k in keys:
-#             continue
-#         new_data[k] = getattr(cur, k)
-#     stmt = update(UserManualProfile).where(UserManualProfile.user_id==user_id).values(**new_data)
-#     await db.execute(stmt)
-#     await db.commit()
-#     out = await get_manual_profile(db, user_id)
-#     return {
-#         "user_id": user_id,
-#         "sizes": out.sizes, "fit": out.fit, "style": out.style, "colors": out.colors,
-#         "price_min": out.price_min, "price_max": out.price_max,
-#         "preferred_store": out.preferred_store, "city": out.city,
-#         "brand_prefs": out.brand_prefs, "notify_channel": out.notify_channel, "measurements": out.measurements,
-#         "gender": out.gender,
-#         "updated_at": str(out.updated_at)
-#     }
-
-# ORM row (internal use)
 async def get_manual_profile_row(db: AsyncSession, user_id: str) -> Optional[UserManualProfile]:
     q = select(UserManualProfile).where(UserManualProfile.user_id == user_id)
     r = await db.execute(q)
@@ -542,3 +339,216 @@ async def remove_cart_item(db: AsyncSession, cart_item_id: str):
 async def clear_cart(db: AsyncSession, cart_id: str):
     await db.execute(delete(CartItem).where(CartItem.cart_id == cart_id))
     await db.commit()
+
+
+
+
+
+############LOYALITY#######################
+
+async def get_user_loyalty(db: AsyncSession, user_id: str):
+    user = await get_user_by_id(db, user_id)
+    if not user:
+        return {"points": 0, "tier": "Bronze", "total_spend": 0.0}
+    return {
+        "points": int(user.loyalty_points or 0),
+        "tier": user.loyalty_tier or "Bronze",
+        "total_spend": float(user.total_spend or 0.0),
+    }
+
+def _compute_tier(total_spend: Decimal) -> str:
+    try:
+        ts = float(total_spend)
+    except Exception:
+        ts = 0.0
+    if ts >= 30000:
+        return "Platinum"
+    elif ts >= 15000:
+        return "Gold"
+    elif ts >= 5000:
+        return "Silver"
+    else:
+        return "Bronze"
+
+async def apply_loyalty_earn(db: AsyncSession, user_id: str, order_amount: float):
+    """Give points after a successful paid order."""
+    user = await get_user_by_id(db, user_id)
+    if not user:
+        return
+
+    # Normalize order_amount to Decimal safely
+    try:
+        amt = Decimal(str(order_amount))
+    except (InvalidOperation, TypeError, ValueError):
+        amt = Decimal(0)
+
+    earned = floor(float(amt) / 10.0)  # 10 points per ₹100 => floor(amount/10)
+    user.loyalty_points = (int(user.loyalty_points or 0) + int(earned))
+    # update total_spend in Decimal form to avoid type errors
+    prev = Decimal(user.total_spend or 0)
+    user.total_spend = prev + amt
+    user.loyalty_tier = _compute_tier(user.total_spend)
+
+    await db.commit()
+
+async def apply_loyalty_redeem(db: AsyncSession, user_id: str, order_amount: float):
+    """
+    Redeem as much as possible for this order, based on available points.
+    Returns (discount_amount, points_used, remaining_points)
+    """
+    user = await get_user_by_id(db, user_id)
+    if not user:
+        return (0.0, 0, 0)
+
+    current_points = int(user.loyalty_points or 0)
+    if current_points <= 0:
+        return (0.0, 0, current_points)
+
+    # 1 point = 0.5 rupees
+    try:
+        max_value = Decimal(current_points) * Decimal("0.5")
+    except Exception:
+        max_value = Decimal(0)
+
+    try:
+        order_amt = Decimal(str(order_amount))
+    except Exception:
+        order_amt = Decimal(0)
+
+    discount = min(order_amt, max_value)
+    # points used = discount / 0.5
+    points_used = int((discount / Decimal("0.5")).to_integral_value(rounding="ROUND_FLOOR"))
+    user.loyalty_points = current_points - points_used
+    await db.commit()
+    return (float(discount), points_used, int(user.loyalty_points or 0))
+
+
+
+from sqlalchemy import select
+from backend.models import Inventory
+
+async def get_inventory_for_product(session, product_id: str):
+    stmt = select(
+        Inventory.product_id,
+        Inventory.store_id,
+        Inventory.location,
+        Inventory.stock,
+        Inventory.reserved
+    ).where(Inventory.product_id == product_id)
+
+    res = await session.execute(stmt)
+    return res.all()
+
+
+
+
+from datetime import datetime, timedelta
+from backend.models import Reservation
+
+
+async def create_reservation(
+    db: AsyncSession,
+    user_id: str,
+    product_id: str,
+    store_id: str,
+    date: str,
+    time: str,
+):
+    print(
+    "[DB] create_reservation called",
+    user_id, product_id, store_id, date, time
+        )
+
+    reservation_id = "RSV-" + uuid.uuid4().hex[:8]
+
+    stmt = insert(Reservation).values(
+        reservation_id=reservation_id,
+        user_id=user_id,
+        product_id=product_id,
+        store_id=store_id,
+        date=date,
+        time=time,
+        status="active",
+    )
+
+    await db.execute(stmt)
+    await db.commit()
+    return reservation_id
+
+
+
+# backend/crud.py
+
+# ... existing code ...
+
+async def confirm_stock_deduction(db: AsyncSession, product_id: str, store_id: str, qty: int):
+    """
+    Moves inventory from 'reserved' to permanently 'sold'.
+    Decreases both 'stock' and 'reserved' by the quantity.
+    """
+    stmt = text("""
+        UPDATE inventory
+        SET stock = stock - :qty,
+            reserved = reserved - :qty,
+            last_updated = NOW()
+        WHERE product_id = :product_id
+          AND store_id = :store_id
+    """)
+    await db.execute(stmt, {"product_id": product_id, "store_id": store_id, "qty": qty})
+    await db.commit()
+    
+    
+    
+# backend/crud.py (Add to end of file)
+
+from .models import ReturnRequest, Feedback
+
+# --- POST PURCHASE ---
+
+async def get_latest_order_for_user(db: AsyncSession, user_id: str):
+    """Fetch the single most recent order for context."""
+    q = select(Order).where(Order.user_id == user_id).order_by(Order.created_at.desc()).limit(1)
+    r = await db.execute(q)
+    return r.scalar_one_or_none()
+
+async def get_order_by_id(db: AsyncSession, order_id: str):
+    q = select(Order).where(Order.order_id == order_id)
+    r = await db.execute(q)
+    return r.scalar_one_or_none()
+
+async def create_return_request(db: AsyncSession, user_id: str, order_id: str, product_id: str, reason: str):
+    return_id = "RET-" + uuid.uuid4().hex[:8]
+    stmt = insert(ReturnRequest).values(
+        return_id=return_id,
+        user_id=user_id,
+        order_id=order_id,
+        product_id=product_id,
+        reason=reason,
+        status="approved" # Auto-approve for demo
+    )
+    await db.execute(stmt)
+    await db.commit()
+    return return_id
+
+async def create_feedback(db: AsyncSession, user_id: str, order_id: str, rating: int, comment: str):
+    stmt = insert(Feedback).values(
+        user_id=user_id,
+        order_id=order_id,
+        rating=rating,
+        comment=comment
+    )
+    await db.execute(stmt)
+    await db.commit()
+    return True
+
+
+
+async def delete_chat_history(db: AsyncSession, user_id: str):
+    """
+    Hard deletes ONLY the chat history logs.
+    Preserves Carts, Reservations, and Orders.
+    """
+    await db.execute(
+        text("DELETE FROM chat_history WHERE user_id = :uid"),
+        {"uid": user_id}
+    )

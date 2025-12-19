@@ -2025,6 +2025,156 @@ class LLMAgentNode(Node):
         agents_text = ", ".join(available_agents)
         
        
+#         self.system_prompt = system_prompt or """
+# You are "Aura," a Top-Tier Retail Sales Associate for a premium fashion brand. 
+# RESPOND IN JSON ONLY.
+
+# AVAILABLE_AGENTS: rec_agent, inventory_agent, cart_agent, payment_agent, order_agent, loyalty_agent, fulfillment_agent, postpurchase_agent
+
+# ──────────────────────────────────────────────────────────────
+# 🧠 SALES PSYCHOLOGY & BEHAVIOR (CRITICAL)
+# ──────────────────────────────────────────────────────────────
+# 1. NEVER be a "Vending Machine". Do not just dump product lists immediately unless the user is very specific.
+# 2. THE CONSULTATIVE LOOP:
+#    - If user says "Show me shirts": 
+#      ❌ Bad: "Here are 5 shirts."
+#      ✅ Good: "I'd love to help! Are you looking for something formal for work, or a casual weekend vibe?"
+#    - Ask ONE clarifying question at a time (Occasion, Fit, Fabric, or Color).
+
+# 3. THE UPSELL (Cross-Selling):
+#    - If the user selects a Product (e.g., a Suit), suggest a complement (e.g., a Tie or Pocket Square) before checkout.
+#    - Use phrases like: "That jacket is a great choice. It pairs perfectly with these chinos..."
+
+# 4. CONTEXT AWARENESS:
+#    - Check UserProfile.city. If they are in "Guntur", prioritize mentions of the Guntur store.
+#    - If UserProfile.loyalty_points > 1000, mention they have points to redeem.
+
+# ──────────────────────────────────────────────────────────────
+# MEMORY & TRUTH SOURCE
+# ──────────────────────────────────────────────────────────────
+# Use SessionMemory.profile + ConversationHistory as the SINGLE source of truth.
+# If information is already present in memory (e.g., size, city), DO NOT ask for it again.
+
+# ──────────────────────────────────────────────────────────────
+# PRODUCT SELECTION & IDENTIFICATION RULES
+# ──────────────────────────────────────────────────────────────
+# User signals for selection: "this looks good", "give me details", "I want this", "add this".
+
+# When product intent is detected, you MUST output:
+# "meta": {
+#   "sku": "<product_id>",
+#   "confirm_selection": true
+# }
+
+# Set intent = "buy" but ready_to_buy = false initially.
+
+# ──────────────────────────────────────────────────────────────
+# PRODUCT ATTRIBUTE RESOLUTION
+# ──────────────────────────────────────────────────────────────
+# When a product is selected, check its `attributes` (size/color).
+# - Ask ONLY for missing REQUIRED attributes.
+# - Present options EXACTLY as provided in the product data.
+# - Once attributes are resolved, transition to Fulfillment.
+
+# ──────────────────────────────────────────────────────────────
+# FULFILLMENT & INVENTORY
+# ──────────────────────────────────────────────────────────────
+# After attributes are resolved, ask:
+# “Would you like to reserve it in store to try, or **add it to your cart**?”
+# (Do NOT ask to 'ship' directly. Shipping happens inside checkout).
+
+# ──────────────────────────────────────────────────────────────
+# CART ACTION RULES
+# ──────────────────────────────────────────────────────────────
+# Trigger cart actions ONLY on explicit phrases like "add to cart" or "buy now".
+# - Include "cart_agent" in plan.
+# - Set meta.add = "product_id".
+
+# ──────────────────────────────────────────────────────────────
+# CHECKOUT & LOYALTY RULES
+# ──────────────────────────────────────────────────────────────
+# 1. TRIGGER: When user says "Checkout", "Buy Now", or "Ship to address":
+#    - Set intent = "buy"
+#    - Set ready_to_buy = true
+#    - Include "payment_agent" in plan.
+
+# 2. LOYALTY DECISION:
+#    - If user answers the loyalty question (e.g., "Yes use points", "No"):
+#      - Set slots.use_loyalty = true OR false.
+#      - Set ready_to_buy = true (to re-trigger payment agent).
+
+# 3. QR GENERATION:
+#    - Do NOT ask for final confirmation after loyalty is decided. 
+#    - The Payment Agent will generate the QR code immediately. 
+#    - Just let the agent run.
+
+# ──────────────────────────────────────────────────────────────
+# PRODUCT DETAIL INTENT
+# ──────────────────────────────────────────────────────────────
+# If user asks to see details/features of a selected product:
+# - Set meta.show_product_details = true.
+# - Do NOT initiate checkout yet.
+
+# ──────────────────────────────────────────────────────────────
+# STRICT JSON OUTPUT SCHEMA
+# ──────────────────────────────────────────────────────────────
+# {
+#   "intent": "recommend" | "buy" | "postpurchase" | "other" | "profile" | "qualify",
+#   "plan": ["string"],
+#   "message": "string",
+#   "ask": ["string"],
+
+#   "slots": {
+#     "occasion": null | "string",
+#     "size": null | "string",
+#     "fit": null | "string",
+#     "color_preference": null | "string",
+#     "budget": null | "number",
+#     "fulfillment": null | "ship" | "click_collect" | "reserve_in_store",
+#     "payment_method": null | "upi" | "card" | "pos",
+#     "preferred_store": null | "string",
+#     "use_loyalty": null | "boolean",
+#     "confirm_payment": null | "boolean",
+#     "city": null | "string"
+#   },
+
+#   "ready_to_buy": "boolean",
+
+#   "next_stage": "greet" | "qualify" | "recommend" | "validate" | "availability" | "checkout" | "loyalty" | "payment" | "confirm",
+
+#   "plan_notes": "string",
+
+#   "meta": {
+#     "rec_query": null | "string",
+#     "sku": null | "string",
+#     "qty": null | "number",
+#     "confirm_selection": null | "boolean",
+#     "add": null | "string",
+#     "product_id": null | "string",
+#     "profile": null | "object",
+#     "show_product_details": null | "boolean",
+#     "check_availability": null | "boolean",
+#     "upsell_trigger": null | "boolean"
+#   }
+# }
+
+# ──────────────────────────────────────────────────────────────
+# POST-PURCHASE INTENT RULES
+# ──────────────────────────────────────────────────────────────
+# If user asks about:
+# - Tracking, "Where is my order?", "Status of delivery" -> Set intent = "postpurchase".
+# - Returning, "I want to return", "Exchange this" -> Set intent = "postpurchase".
+# - Feedback, "Leave a review", "Rate this" -> Set intent = "postpurchase".
+
+# For these intents, plan must include: ["postpurchase_agent"].
+# ──────────────────────────────────────────────────────────────
+# OUTPUT RULES
+# ──────────────────────────────────────────────────────────────
+# - Message: Short, persuasive, consultative.
+# - Ask: Max 1 question at a time.
+# """
+
+
         self.system_prompt = system_prompt or """
 You are "Aura," a Top-Tier Retail Sales Associate for a premium fashion brand. 
 RESPOND IN JSON ONLY.
@@ -2089,24 +2239,32 @@ CART ACTION RULES
 Trigger cart actions ONLY on explicit phrases like "add to cart" or "buy now".
 - Include "cart_agent" in plan.
 - Set meta.add = "product_id".
+- **IMPORTANT**: The Cart Agent will handle the response asking "Look for something else or Checkout?". You do not need to generate this message.
 
 ──────────────────────────────────────────────────────────────
-CHECKOUT & LOYALTY RULES
+CHECKOUT FLOW (STRICT SEQUENCE)
 ──────────────────────────────────────────────────────────────
-1. TRIGGER: When user says "Checkout", "Buy Now", or "Ship to address":
-   - Set intent = "buy"
-   - Set ready_to_buy = true
-   - Include "payment_agent" in plan.
+Do NOT skip steps. Payment Agent handles the logic, you provide the inputs.
 
-2. LOYALTY DECISION:
-   - If user answers the loyalty question (e.g., "Yes use points", "No"):
-     - Set slots.use_loyalty = true OR false.
-     - Set ready_to_buy = true (to re-trigger payment agent).
+1. START CHECKOUT: 
+   - User says: "Checkout", "Buy Now", "Ship".
+   - Set intent = "buy", ready_to_buy = true.
+   - Plan: ["payment_agent"].
+   - Note: Agent will ask about Loyalty.
 
-3. QR GENERATION:
-   - Do NOT ask for final confirmation after loyalty is decided. 
-   - The Payment Agent will generate the QR code immediately. 
-   - Just let the agent run.
+2. LOYALTY ANSWER: 
+   - User says: "Yes use points", "No", "Skip".
+   - Set slots.use_loyalty = true OR false.
+   - Set ready_to_buy = true.
+   - Plan: ["payment_agent"].
+   - Note: Agent will show Summary & ask for Payment Method.
+
+3. PAYMENT METHOD SELECTION:
+   - User says: "UPI", "Card", "Credit Card".
+   - Set slots.payment_method = "upi" OR "card".
+   - Set ready_to_buy = true.
+   - Plan: ["payment_agent"].
+   - Note: Agent will generate QR or Card UI.
 
 ──────────────────────────────────────────────────────────────
 PRODUCT DETAIL INTENT
@@ -2173,7 +2331,6 @@ OUTPUT RULES
 - Message: Short, persuasive, consultative.
 - Ask: Max 1 question at a time.
 """
-
         self.timeout = timeout
 
     async def call_openai(self, prompt: str) -> str:
@@ -2295,14 +2452,53 @@ OUTPUT RULES
             out = await self.call_openai(prompt)
         else:
             raise RuntimeError("No LLM provider configured")
+        
+        # --- ROBUST JSON PARSING START ---
+        import re
+        
+        # 1. Strip Markdown Code Blocks (Common cause of errors)
+        clean_out = out.strip()
+        if "```" in clean_out:
+            # Remove ```json ... ``` wrappers
+            clean_out = re.sub(r"^```[a-zA-Z]*\n", "", clean_out)
+            clean_out = re.sub(r"\n```$", "", clean_out)
+            
         try:
-            parsed = json.loads(out)
-        except Exception:
+            # 2. Attempt clean parse
+            parsed = json.loads(clean_out)
+            
+        except json.JSONDecodeError:
+            try:
+                # 3. Aggressive Regex Extraction (Find the first { ... } block)
+                # re.DOTALL (re.S) allows matching across newlines
+                match = re.search(r"(\{.*\})", out, re.DOTALL)
+                if match:
+                    json_str = match.group(1)
+                    # Attempt to fix common trailing comma errors
+                    json_str = re.sub(r",\s*\}", "}", json_str) 
+                    parsed = json.loads(json_str)
+                else:
+                    raise ValueError("No JSON object found in regex match")
+            except Exception as e:
+                # 4. Safe Fallback (Prevents 500 Server Error)
+                print(f"[ERROR] JSON Parsing Failed completely. Raw Output: {out[:100]}... Error: {e}")
+                parsed = {
+                    "intent": "other",
+                    "plan": [],
+                    "message": "I'm having trouble processing that request. Could you try rephrasing?", 
+                    "notes": "json_parse_error", 
+                    "raw": out
+                }
+        # --- ROBUST JSON PARSING END ---
+        # try:
+        #     parsed = json.loads(out)
+        # except Exception:
             
 
-            import re
-            m = re.search(r"(\{.*\})", out, re.S)
-            parsed = json.loads(m.group(1)) if m else {"intent": "other", "plan": [], "message": None, "notes": "no_json", "raw": out}
+        #     import re
+        #     m = re.search(r"(\{.*\})", out, re.S)
+        #     parsed = json.loads(m.group(1)) if m else {"intent": "other", "plan": [], "message": None, "notes": "no_json", "raw": out}
+            
         intent = parsed.get("intent", "other") if isinstance(parsed, dict) else "other"
         plan = parsed.get("plan", []) if isinstance(parsed, dict) else []
         message = parsed.get("message")
@@ -2574,44 +2770,44 @@ class CartAgentNode(Node):
             summary = await cart_agent.add_first_rec_to_cart(user_id, channel, recs[0], qty=qty)
             
         print(f"[DEBUG][CART_NODE] Success. New Count: {summary['count']}")
-        msg = f"Added to your cart. {summary['count']} item(s), subtotal ₹{summary['subtotal']}."
+        msg = (
+            f"✅ Added to your cart. You have {summary['count']} item(s) for ₹{summary['subtotal']}.\n"
+            "Would you like to look for something else, or check out now?"
+        )
         return NodeResult({"success": True, "cart": summary, "message": msg})
+
+
 
 class PaymentAgentNode(Node):
     async def run(self, ctx: Dict[str, Any]) -> NodeResult:
         from backend.db import AsyncSessionLocal
         from backend import crud as db_crud
+        import uuid
+        import time
+        import json
+        
+        # Ensure we access the global redis client defined in this file
+        # (Assuming 'redis' is defined at the top of master_graph.py)
+        global redis 
 
-        print(f"[DEBUG][PAYMENT_NODE] Starting run...") # DEBUG
+        print(f"[DEBUG][PAYMENT_NODE] Starting run...") 
         
         nodouts = ctx.get("node_outputs", {})
         llm_intent = nodouts.get("llm_intent") or {}
         slots = llm_intent.get("slots") or {}
+        
         user_id = ctx.get("user_id", "anonymous")
         sid = ctx.get("session_id", "user:anon:web")
         channel = (sid.split(":")[-1] if ":" in sid else "web") or "web"
-        
-        # 1. FORCE LOYALTY DECISION (The "Infinite Loop" Fix)
         user_text = ctx.get("incoming_text", "").lower()
-        use_loyalty = slots.get("use_loyalty")
 
-        # If LLM failed to extract boolean, look at raw text
-        if use_loyalty is None:
-            if any(x in user_text for x in ["no", "nope", "nah", "don't", "cancel", "skip"]):
-                use_loyalty = False
-                print("[DEBUG][PAYMENT_NODE] Detected 'No' for loyalty via keyword.")
-            elif any(x in user_text for x in ["yes", "yeah", "sure", "ok", "use points"]):
-                use_loyalty = True
-                print("[DEBUG][PAYMENT_NODE] Detected 'Yes' for loyalty via keyword.")
-        
-        # 2. Fetch Data
+        # 1. Fetch Data
         async with AsyncSessionLocal() as session:
             cart = await db_crud.get_or_create_cart(session, user_id, channel)
             items = await db_crud.get_cart_items(session, cart.cart_id)
             loyalty_info = await db_crud.get_user_loyalty(session, user_id)
 
         if not items:
-            print("[DEBUG][PAYMENT_NODE] Cart is empty.")
             return NodeResult({
                 "success": False,
                 "status": "empty_cart",
@@ -2621,58 +2817,241 @@ class PaymentAgentNode(Node):
         # Calculate Base Totals
         subtotal = sum([float(i.price_at_add or 0) * int(i.qty or 1) for i in items])
         current_points = loyalty_info.get("points", 0)
-        loyalty_value = current_points * 0.5  # 1 Point = ₹0.50
-        
-        print(f"[DEBUG][PAYMENT_NODE] Subtotal: {subtotal}, Points: {current_points}")
+        loyalty_value = current_points * 0.5 
 
-        # 3. LOYALTY INTERVENTION LOOP
-        # Only trigger if they actually have points AND haven't decided
+        # --- LOGIC STEP 1: DETECT LOYALTY INTENT ---
+        use_loyalty = slots.get("use_loyalty")
+        
+        if use_loyalty is None:
+            if any(x in user_text for x in ["no", "nope", "cancel", "skip", "don't"]):
+                use_loyalty = False
+            elif any(x in user_text for x in ["yes", "sure", "ok", "use points", "redeem"]):
+                use_loyalty = True
+
         if current_points > 0 and use_loyalty is None:
             max_discount = min(subtotal, loyalty_value)
-            print("[DEBUG][PAYMENT_NODE] Pausing for loyalty decision.")
             return NodeResult({
                 "success": False,
                 "status": "needs_loyalty_decision",
                 "message": (
-                    f"Your Cart Total is ₹{int(subtotal)}.\n"
-                    f"💎 You have **{current_points} Loyalty Points** worth ₹{int(loyalty_value)}.\n"
+                    f"You have **{current_points} Loyalty Points** (Value: ₹{int(loyalty_value)}).\n"
                     f"Would you like to redeem them to save ₹{int(max_discount)}?"
                 )
             })
 
-        # 4. APPLY LOYALTY & CALCULATE FINAL
+        # --- LOGIC STEP 2: CALCULATE FINAL TOTALS ---
         loyalty_discount = 0.0
         points_used = 0
-        
         if use_loyalty is True and current_points > 0:
             loyalty_discount = min(subtotal, loyalty_value)
             points_used = int(loyalty_discount / 0.5)
             
         final_amount = subtotal - loyalty_discount
-        
-        # 5. GENERATE QR (Checkout)
-        intent_id = "PINT-" + uuid.uuid4().hex[:8]
-        qr_data = f"upi://pay?pa=retailco@upi&am={final_amount:.2f}&tn=Order{intent_id}"
-        
-        msg_parts = [f"🧾 **Order Summary**"]
-        msg_parts.append(f"Subtotal: ₹{int(subtotal)}")
-        
-        if loyalty_discount > 0:
-            msg_parts.append(f"Loyalty Discount: -₹{int(loyalty_discount)} ({points_used} pts)")
-        
-        msg_parts.append(f"**TOTAL TO PAY: ₹{int(final_amount)}**")
-        msg_parts.append("\nScan the QR code below to pay.")
-        
-        print(f"[DEBUG][PAYMENT_NODE] Generated QR. Final Amount: {final_amount}")
 
-        return NodeResult({
-            "success": True,
-            "status": "pending_payment", 
+        item_details_text = ""
+        for i in items:
+            p_name = i.product_id 
+            item_details_text += f"- {p_name} (x{i.qty}): ₹{int(i.price_at_add) * i.qty}\n"
+
+        # --- LOGIC STEP 3: CHECK PAYMENT METHOD ---
+        payment_method = slots.get("payment_method")
+        
+        if not payment_method:
+            if "upi" in user_text: payment_method = "upi"
+            elif "card" in user_text or "debit" in user_text or "credit" in user_text: payment_method = "card"
+
+        if not payment_method:
+            msg = (
+                f"🧾 **Order Summary**\n"
+                f"{item_details_text}"
+                f"----------------\n"
+                f"Subtotal: ₹{int(subtotal)}\n"
+            )
+            if loyalty_discount > 0:
+                msg += f"Loyalty Discount: -₹{int(loyalty_discount)} ({points_used} pts used)\n"
+            
+            msg += f"**Final Total: ₹{int(final_amount)}**\n\n"
+            msg += "How would you like to pay? (UPI or Card)"
+            
+            return NodeResult({
+                "success": True, 
+                "status": "awaiting_payment_method",
+                "message": msg,
+                "final_amount": final_amount
+            })
+
+        # --- LOGIC STEP 4: EXECUTE PAYMENT ---
+        intent_id = "ORD-" + uuid.uuid4().hex[:8]
+        
+        # Save intent to Redis so it can be verified/regenerated later
+        intent_data = {
             "payment_intent_id": intent_id,
-            "qr_data": qr_data,
             "amount": final_amount,
-            "message": "\n".join(msg_parts)
-        })
+            "status": "pending",
+            "product_id": items[0].product_id if items else "unknown",
+            "qty": sum(i.qty for i in items),
+            "created_at": time.time(),
+            "expires_at": time.time() + 300
+        }
+        
+        # 🔥 CRITICAL: Write to Redis and Log it
+        redis_key = f"payment_intent:{intent_id}"
+        await redis.set(redis_key, json.dumps(intent_data), ex=300)
+        print(f"[DEBUG][PAYMENT_NODE] Saved Intent to Redis: {redis_key}")
+
+        if payment_method == "upi":
+            qr_data = f"upi://pay?pa=retailco@upi&am={final_amount:.2f}&tn={intent_id}"
+            return NodeResult({
+                "success": True,
+                "status": "pending_payment",
+                "payment_intent_id": intent_id,
+                "payment_type": "upi",
+                "qr_data": qr_data, 
+                "amount": final_amount,
+                "message": f"Generated UPI QR for ₹{int(final_amount)}. Please scan to pay.\n(Click 'I have paid' when done)."
+            })
+            
+        elif payment_method == "card":
+            return NodeResult({
+                "success": True,
+                "status": "pending_payment",
+                "payment_intent_id": intent_id,
+                "payment_type": "card",
+                "show_card_ui": True, 
+                "amount": final_amount,
+                "message": f"Please enter your card details for ₹{int(final_amount)} secure payment."
+            })
+        
+        else:
+             return NodeResult({"success": False, "message": "Invalid payment method. Please choose UPI or Card."})
+# class PaymentAgentNode(Node):
+#     async def run(self, ctx: Dict[str, Any]) -> NodeResult:
+#         from backend.db import AsyncSessionLocal
+#         from backend import crud as db_crud
+
+#         print(f"[DEBUG][PAYMENT_NODE] Starting run...") 
+        
+#         nodouts = ctx.get("node_outputs", {})
+#         llm_intent = nodouts.get("llm_intent") or {}
+#         slots = llm_intent.get("slots") or {}
+        
+#         user_id = ctx.get("user_id", "anonymous")
+#         sid = ctx.get("session_id", "user:anon:web")
+#         channel = (sid.split(":")[-1] if ":" in sid else "web") or "web"
+#         user_text = ctx.get("incoming_text", "").lower()
+
+#         # 1. Fetch Data
+#         async with AsyncSessionLocal() as session:
+#             cart = await db_crud.get_or_create_cart(session, user_id, channel)
+#             items = await db_crud.get_cart_items(session, cart.cart_id)
+#             loyalty_info = await db_crud.get_user_loyalty(session, user_id)
+
+#         if not items:
+#             return NodeResult({
+#                 "success": False,
+#                 "status": "empty_cart",
+#                 "message": "Your cart is empty. Please add items first."
+#             })
+            
+#         # Calculate Base Totals
+#         subtotal = sum([float(i.price_at_add or 0) * int(i.qty or 1) for i in items])
+#         current_points = loyalty_info.get("points", 0)
+#         loyalty_value = current_points * 0.5  # 1 Point = ₹0.50
+
+#         # --- LOGIC STEP 1: DETECT LOYALTY INTENT ---
+#         use_loyalty = slots.get("use_loyalty")
+        
+#         # Fallback keyword detection for boolean slots
+#         if use_loyalty is None:
+#             if any(x in user_text for x in ["no", "nope", "cancel", "skip", "don't"]):
+#                 use_loyalty = False
+#             elif any(x in user_text for x in ["yes", "sure", "ok", "use points", "redeem"]):
+#                 use_loyalty = True
+
+#         # IF points exist AND user hasn't decided yet -> ASK
+#         if current_points > 0 and use_loyalty is None:
+#             max_discount = min(subtotal, loyalty_value)
+#             return NodeResult({
+#                 "success": False,
+#                 "status": "needs_loyalty_decision",
+#                 "message": (
+#                     f"You have **{current_points} Loyalty Points** (Value: ₹{int(loyalty_value)}).\n"
+#                     f"Would you like to redeem them to save ₹{int(max_discount)}?"
+#                 )
+#             })
+
+#         # --- LOGIC STEP 2: CALCULATE FINAL TOTALS ---
+#         loyalty_discount = 0.0
+#         points_used = 0
+#         if use_loyalty is True and current_points > 0:
+#             loyalty_discount = min(subtotal, loyalty_value)
+#             points_used = int(loyalty_discount / 0.5)
+            
+#         final_amount = subtotal - loyalty_discount
+
+#         # Detailed Item List for Summary
+#         item_details_text = ""
+#         for i in items:
+#             p_name = i.product_id # Ideally fetch name, using ID for now
+#             item_details_text += f"- {p_name} (x{i.qty}): ₹{int(i.price_at_add) * i.qty}\n"
+
+#         # --- LOGIC STEP 3: CHECK PAYMENT METHOD ---
+#         payment_method = slots.get("payment_method")
+        
+#         # Fallback keyword detection for payment method
+#         if not payment_method:
+#             if "upi" in user_text: payment_method = "upi"
+#             elif "card" in user_text or "debit" in user_text or "credit" in user_text: payment_method = "card"
+
+#         # If NO payment method selected yet -> SHOW SUMMARY & ASK
+#         if not payment_method:
+#             msg = (
+#                 f"🧾 **Order Summary**\n"
+#                 f"{item_details_text}"
+#                 f"----------------\n"
+#                 f"Subtotal: ₹{int(subtotal)}\n"
+#             )
+#             if loyalty_discount > 0:
+#                 msg += f"Loyalty Discount: -₹{int(loyalty_discount)} ({points_used} pts used)\n"
+            
+#             msg += f"**Final Total: ₹{int(final_amount)}**\n\n"
+#             msg += "How would you like to pay? (UPI or Card)"
+            
+#             return NodeResult({
+#                 "success": True, 
+#                 "status": "awaiting_payment_method",
+#                 "message": msg,
+#                 "final_amount": final_amount
+#             })
+
+#         # --- LOGIC STEP 4: EXECUTE PAYMENT ---
+#         intent_id = "ORD-" + uuid.uuid4().hex[:8]
+        
+#         if payment_method == "upi":
+#             qr_data = f"upi://pay?pa=retailco@upi&am={final_amount:.2f}&tn={intent_id}"
+#             return NodeResult({
+#                 "success": True,
+#                 "status": "payment_pending",
+#                 "payment_intent_id": intent_id,
+#                 "payment_type": "upi",
+#                 "qr_data": qr_data, # Frontend should render this as QR
+#                 "amount": final_amount,
+#                 "message": f"Generated UPI QR for ₹{int(final_amount)}. Please scan to pay.\n(Click 'I have paid' when done)."
+#             })
+            
+#         elif payment_method == "card":
+#             return NodeResult({
+#                 "success": True,
+#                 "status": "payment_pending",
+#                 "payment_intent_id": intent_id,
+#                 "payment_type": "card",
+#                 "show_card_ui": True, # Frontend triggers fake card modal
+#                 "amount": final_amount,
+#                 "message": f"Please enter your card details for ₹{int(final_amount)} secure payment."
+#             })
+        
+#         else:
+#              return NodeResult({"success": False, "message": "Invalid payment method. Please choose UPI or Card."})
 
 class OrderAgentNode(Node):
     async def run(self, ctx: Dict[str, Any]) -> NodeResult:

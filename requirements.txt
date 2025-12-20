@@ -158,6 +158,7 @@
 
 
 
+
 # --- Core web stack ---
 fastapi==0.115.6
 uvicorn[standard]==0.30.6
@@ -172,14 +173,14 @@ python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 email-validator==2.3.0
 bcrypt==4.3.0
-# Loosened to allow security updates/conflict resolution
+# Loosened to allow updates
 cryptography>=42.0.8
 
 # --- Async / I/O ---
 aiofiles==23.1.0
-# Loosened aiohttp (Google often needs specific versions here)
+# Loosened aiohttp
 aiohttp>=3.12.15
-# Fixed httpx from previous error
+# Fixed httpx conflict
 httpx>=0.28.1
 watchfiles==1.1.0
 httptools==0.6.4
@@ -188,16 +189,14 @@ websockets==15.0.1
 # --- Utilities ---
 redis==6.4.0
 requests==2.32.3
-# REMOVED: idna (let requests/httpx decide)
-# REMOVED: typing_extensions (let fastapi/pydantic decide)
-# REMOVED: click (let uvicorn decide)
 
 # --- ORM / Templates ---
 Mako==1.3.10
 Jinja2==3.1.4
 
 # --- Validation ---
-pydantic==2.7.4
+# UPDATED: Raised to 2.9.0 to satisfy google-genai requirements
+pydantic>=2.9.0
 
 # --- AI ---
 google-genai==1.56.0

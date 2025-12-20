@@ -2574,7 +2574,7 @@ class RecAgentNode(Node):
                     deduced = r
                     break
 
-        return NodeResult({"recs": recs, "deduced": deduced})
+        return NodeResult({"recs": recs, "deduced": deduced , "stage": STAGES["RECOMMEND"]})
     
 class InventoryAgentNode(Node):
     async def run(self, ctx: Dict[str, Any]) -> NodeResult:
@@ -2644,7 +2644,8 @@ class InventoryAgentNode(Node):
             "user_city": user_city,
             "local_store_found": local_store_found,
             "alternatives": alternatives,
-            "message": "I'm sorry, I checked everywhere but this item is currently out of stock." if oos_status else None
+            "message": "I'm sorry, I checked everywhere but this item is currently out of stock." if oos_status else None,
+            "stage": STAGES["AVAILABILITY"]
         })
 
         
@@ -2774,7 +2775,7 @@ class CartAgentNode(Node):
             f"✅ Added to your cart. You have {summary['count']} item(s) for ₹{summary['subtotal']}.\n"
             "Would you like to look for something else, or check out now?"
         )
-        return NodeResult({"success": True, "cart": summary, "message": msg})
+        return NodeResult({"success": True, "cart": summary, "message": msg,"stage": STAGES["CART"]})
 
 
 
@@ -2833,6 +2834,7 @@ class PaymentAgentNode(Node):
             return NodeResult({
                 "success": False,
                 "status": "needs_loyalty_decision",
+                "stage": STAGES["CHECKOUT"],
                 "message": (
                     f"You have **{current_points} Loyalty Points** (Value: ₹{int(loyalty_value)}).\n"
                     f"Would you like to redeem them to save ₹{int(max_discount)}?"
@@ -2877,7 +2879,8 @@ class PaymentAgentNode(Node):
                 "success": True, 
                 "status": "awaiting_payment_method",
                 "message": msg,
-                "final_amount": final_amount
+                "final_amount": final_amount,
+                "stage": STAGES["CHECKOUT"]
             })
 
         # --- LOGIC STEP 4: EXECUTE PAYMENT ---
@@ -2908,6 +2911,7 @@ class PaymentAgentNode(Node):
                 "payment_type": "upi",
                 "qr_data": qr_data, 
                 "amount": final_amount,
+                "stage": STAGES["PAYMENT"],
                 "message": f"Generated UPI QR for ₹{int(final_amount)}. Please scan to pay.\n(Click 'I have paid' when done)."
             })
             
@@ -3164,7 +3168,8 @@ class FulfillmentAgentNode(Node):
             return NodeResult({
                 "success": False,
                 "message": "Sure! Which store would you like to reserve this at?",
-                "next_stage": "reserve_in_store" # Keep user in this stage
+                "next_stage": "reserve_in_store", # Keep user in this stage
+                 "stage": STAGES["RESERVE"]
             })
 
         # B. Missing Date?
@@ -3218,6 +3223,7 @@ class FulfillmentAgentNode(Node):
             "success": True,
             "mode": "reserve_in_store",
             "reservation": reservation_obj,
+            "stage": STAGES["CART"],
             "message": (
                 f"✅ Reserved successfully at store {store_id}. "
                 f"Please visit on {r_date} at {r_time}. Your code is {res_id}."
@@ -3593,6 +3599,26 @@ async def run_master(session_id: str, incoming_text: str, user_meta: Optional[Di
                 "category": p.get("category"),
             })
          final["results"]["items"] = items
+         
+    # ================================
+    # 🔥 STAGE PROPAGATION TO FRONTEND
+    # ================================
+
+    # Priority:
+    # 1. Agent-reported stage
+    # 2. Session memory stage
+    # 3. Fallback
+
+    stage = session["memory"].get("stage", STAGES["RECOMMEND"])
+
+    for out in ctx["node_outputs"].values():
+        if isinstance(out, dict) and out.get("stage"):
+            stage = out["stage"]
+
+    final["results"]["stage"] = stage
+
+    # 🔒 Keep backend memory in sync
+    session["memory"]["stage"] = stage
 
     # Save Session
     session.setdefault("history", []).append({

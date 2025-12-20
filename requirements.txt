@@ -114,6 +114,50 @@
 
 
 
+# # --- Core web stack ---
+# fastapi==0.115.6
+# uvicorn[standard]==0.30.6
+# SQLAlchemy==2.0.43
+# asyncpg==0.30.0
+# alembic==1.11.1
+# python-dotenv==1.0.0
+# orjson==3.11.3
+
+# # --- Auth / security ---
+# python-jose[cryptography]==3.3.0
+# passlib[bcrypt]==1.7.4
+# email-validator==2.3.0
+# bcrypt==4.3.0
+# cryptography==42.0.8
+
+# # --- Async / I/O ---
+# aiofiles==23.1.0
+# aiohttp==3.12.15
+# httpx==0.24.0
+# # anyio==3.7.1
+# watchfiles==1.1.0
+# httptools==0.6.4
+# websockets==15.0.1
+
+# # --- Utilities ---
+# redis==6.4.0
+# idna==3.10
+# requests==2.32.3
+# typing_extensions==4.12.2
+# click==8.1.7
+
+# # --- ORM / Templates ---
+# Mako==1.3.10
+# Jinja2==3.1.4
+
+# # --- Validation ---
+# pydantic==2.7.4    # pulls the right pydantic-core automatically
+
+# google-genai==1.56.0
+
+
+
+
 # --- Core web stack ---
 fastapi==0.115.6
 uvicorn[standard]==0.30.6
@@ -128,29 +172,32 @@ python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 email-validator==2.3.0
 bcrypt==4.3.0
-cryptography==42.0.8
+# Loosened to allow security updates/conflict resolution
+cryptography>=42.0.8
 
 # --- Async / I/O ---
 aiofiles==23.1.0
-aiohttp==3.12.15
-httpx==0.24.0
-# anyio==3.7.1
+# Loosened aiohttp (Google often needs specific versions here)
+aiohttp>=3.12.15
+# Fixed httpx from previous error
+httpx>=0.28.1
 watchfiles==1.1.0
 httptools==0.6.4
 websockets==15.0.1
 
 # --- Utilities ---
 redis==6.4.0
-idna==3.10
 requests==2.32.3
-typing_extensions==4.12.2
-click==8.1.7
+# REMOVED: idna (let requests/httpx decide)
+# REMOVED: typing_extensions (let fastapi/pydantic decide)
+# REMOVED: click (let uvicorn decide)
 
 # --- ORM / Templates ---
 Mako==1.3.10
 Jinja2==3.1.4
 
 # --- Validation ---
-pydantic==2.7.4    # pulls the right pydantic-core automatically
+pydantic==2.7.4
 
+# --- AI ---
 google-genai==1.56.0
